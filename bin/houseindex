@@ -4,14 +4,23 @@
 # Captain Cronos House Toolkit
 #
 # Command : houseindex
-# Purpose : Generate a deterministic Markdown index of tracked repository files.
+# Purpose : Generate a deterministic Markdown index of repository files.
 #
 #==============================================================================
 
-set -o errexit
-set -o nounset
 set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source
+# shellcheck source=../lib/house_toolkit.sh
+source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+TARGET="${1:-$PWD}"
+
+if ! house_is_git_repo "$TARGET"; then
+    house_error "Not a Git repository: $TARGET"
+    exit 1
+fi
+
+house_error "houseindex is not implemented yet."
+exit 2
