@@ -61,64 +61,19 @@ fi
 #------------------------------------------------------------------------------
 
 house_info() {
-
     printf "%b%s%b\n" "${C_CYAN}" "$*" "${C_RESET}"
-
 }
 
 house_success() {
-
     printf "%b%s%b\n" "${C_GREEN}" "$*" "${C_RESET}"
-
 }
 
 house_warning() {
-
     printf "%b%s%b\n" "${C_YELLOW}" "$*" "${C_RESET}"
-
 }
 
 house_error() {
-
     printf "%b%s%b\n" "${C_RED}" "$*" "${C_RESET}" >&2
-
-}
-
-#------------------------------------------------------------------------------
-# Banner
-#------------------------------------------------------------------------------
-
-house_banner() {
-
-    printf "\n"
-    printf "Captain Cronos House Toolkit\n"
-    printf "Version : %s\n" "$HOUSE_VERSION"
-    printf "Codename: %s\n" "$HOUSE_CODENAME"
-
-    house_hr
-
-}
-
-#------------------------------------------------------------------------------
-# Git Helpers
-#------------------------------------------------------------------------------
-
-house_is_git_repo() {
-
-    git rev-parse --is-inside-work-tree >/dev/null 2>&1
-
-}
-
-house_git_branch() {
-
-    git branch --show-current 2>/dev/null
-
-}
-
-house_git_clean() {
-
-    [[ -z "$(git status --porcelain 2>/dev/null)" ]]
-
 }
 
 #------------------------------------------------------------------------------
@@ -126,13 +81,10 @@ house_git_clean() {
 #------------------------------------------------------------------------------
 
 house_hr() {
-
     local cols
 
     cols=$(tput cols 2>/dev/null || echo 80)
-
     printf "%${cols}s\n" "" | tr ' ' '-'
-
 }
 
 #------------------------------------------------------------------------------
@@ -140,10 +92,8 @@ house_hr() {
 #------------------------------------------------------------------------------
 
 house_section() {
-
     printf "\n%s\n" "$1"
     house_hr
-
 }
 
 #------------------------------------------------------------------------------
@@ -151,10 +101,107 @@ house_section() {
 #------------------------------------------------------------------------------
 
 house_kv() {
-
     local key="$1"
     local value="$2"
 
     printf " %-18s %s\n" "${key}" "${value}"
+}
 
+#------------------------------------------------------------------------------
+# Banner
+#------------------------------------------------------------------------------
+
+house_banner() {
+    printf "\n"
+    printf "Captain Cronos House Toolkit\n"
+    printf "Version : %s\n" "$HOUSE_VERSION"
+    printf "Codename: %s\n" "$HOUSE_CODENAME"
+    house_hr
+}
+
+#------------------------------------------------------------------------------
+# Repository Helpers
+#------------------------------------------------------------------------------
+
+house_repo_root() {
+    local target="${1:-$PWD}"
+
+    git -C "$target" rev-parse --show-toplevel 2>/dev/null
+}
+
+house_is_git_repo() {
+    local target="${1:-$PWD}"
+
+    git -C "$target" rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+house_repo_name() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    basename "$root"
+}
+
+#------------------------------------------------------------------------------
+# Git Helpers
+#------------------------------------------------------------------------------
+
+house_git_branch() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    git -C "$root" branch --show-current 2>/dev/null
+}
+
+house_git_clean() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    [[ -z "$(git -C "$root" status --porcelain 2>/dev/null)" ]]
+}
+
+house_git_commit() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    git -C "$root" rev-parse --short HEAD 2>/dev/null
+}
+
+#------------------------------------------------------------------------------
+# Filesystem Helpers
+#------------------------------------------------------------------------------
+
+house_directory_count() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    find "$root" -path "$root/.git" -prune -o -mindepth 1 -type d -print | wc -l
+}
+
+house_file_count() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    find "$root" -path "$root/.git" -prune -o -type f -print | wc -l
+}
+
+house_markdown_count() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    find "$root" -path "$root/.git" -prune -o -type f -iname '*.md' -print | wc -l
+}
+
+house_png_count() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    find "$root" -path "$root/.git" -prune -o -type f -iname '*.png' -print | wc -l
+}
+
+house_repository_size() {
+    local root
+
+    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    du -sh --exclude='.git' "$root" 2>/dev/null | awk '{print $1}'
 }
