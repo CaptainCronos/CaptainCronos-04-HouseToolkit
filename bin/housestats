@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#==============================================================================
+#
+# Captain Cronos House Toolkit
+#
+# Command : housestats
+# Purpose : Display repository statistics.
+#
+#==============================================================================
+
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../lib/house_toolkit.sh
+source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+TARGET="${1:-$PWD}"
+
+if ! house_is_git_repo "$TARGET"; then
+    house_error "Not a Git repository: $TARGET"
+    exit 1
+fi
+
+REPO_ROOT="$(house_repo_root "$TARGET")"
+REPO_NAME="$(house_repo_name "$REPO_ROOT")"
+BRANCH="$(house_git_branch "$REPO_ROOT")"
+COMMIT="$(house_git_commit "$REPO_ROOT")"
+
+if [[ -z "$BRANCH" ]]; then
+    BRANCH="Detached HEAD"
+fi
+
+if house_git_clean "$REPO_ROOT"; then
+    STATUS="Clean"
+else
+    STATUS="Modified"
+fi
+
+house_banner
+
+house_section "Repository"
+house_kv "Name" "$REPO_NAME"
+house_kv "Path" "$REPO_ROOT"
+house_kv "Branch" "$BRANCH"
+house_kv "Status" "$STATUS"
+house_kv "Commit" "$COMMIT"
+
+house_section "Statistics"
+house_kv "Directories" "$(house_directory_count "$REPO_ROOT")"
+house_kv "Files" "$(house_file_count "$REPO_ROOT")"
+house_kv "Markdown Files" "$(house_markdown_count "$REPO_ROOT")"
+house_kv "PNG Files" "$(house_png_count "$REPO_ROOT")"
+house_kv "Repository Size" "$(house_repository_size "$REPO_ROOT")"
+
+printf "\n"
