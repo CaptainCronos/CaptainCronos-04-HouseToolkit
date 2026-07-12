@@ -175,7 +175,7 @@ house_directory_count() {
     local root
 
     root="$(house_repo_root "${1:-$PWD}")" || return 1
-    find "$root" -path "$root/.git" -prune -o -mindepth 1 -type d -print | wc -l
+    find "$root" -mindepth 1 -path "$root/.git" -prune -o -type d -print | wc -l
 }
 
 house_file_count() {
