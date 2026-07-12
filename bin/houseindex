@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#==============================================================================
+#
+# Captain Cronos House Toolkit
+#
+# Command : houseindex
+# Purpose : Generate a deterministic Markdown index of tracked repository files.
+#
+#==============================================================================
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source
