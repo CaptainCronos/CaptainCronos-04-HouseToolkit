@@ -13,26 +13,18 @@ source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 
 house_banner
 
-cat <<EOF
-Available Commands
-------------------
+house_section "Available Commands"
 
-househelp
-    Display this help screen.
+house_kv "househelp"  "Display this help screen."
+house_kv "housestats" "Display repository statistics."
 
-housestats
-    Display House of Tartarus repository statistics.
+house_section "Planned Commands"
 
-Planned Commands
-----------------
-
-houseindex
-housevalidate
-housepreview
-housebuild
-housemember
-housecard
-houserelease
-housepublish
-
-EOF
+printf "houseindex\n"
+printf "housevalidate\n"
+printf "housepreview\n"
+printf "housebuild\n"
+printf "housemember\n"
+printf "housecard\n"
+printf "houserelease\n"
+printf "housepublish\n"

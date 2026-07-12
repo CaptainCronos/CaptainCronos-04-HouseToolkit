@@ -90,14 +90,12 @@ house_error() {
 
 house_banner() {
 
-cat <<EOF
-Captain Cronos House Toolkit
-============================
+    printf "\n"
+    printf "Captain Cronos House Toolkit\n"
+    printf "Version : %s\n" "$HOUSE_VERSION"
+    printf "Codename: %s\n" "$HOUSE_CODENAME"
 
-Version : ${HOUSE_VERSION}
-Codename: ${HOUSE_CODENAME}
-
-EOF
+    house_hr
 
 }
 
@@ -120,5 +118,43 @@ house_git_branch() {
 house_git_clean() {
 
     [[ -z "$(git status --porcelain 2>/dev/null)" ]]
+
+}
+
+#------------------------------------------------------------------------------
+# Horizontal Rule
+#------------------------------------------------------------------------------
+
+house_hr() {
+
+    local cols
+
+    cols=$(tput cols 2>/dev/null || echo 80)
+
+    printf "%${cols}s\n" "" | tr ' ' '-'
+
+}
+
+#------------------------------------------------------------------------------
+# Section Header
+#------------------------------------------------------------------------------
+
+house_section() {
+
+    printf "\n%s\n" "$1"
+    house_hr
+
+}
+
+#------------------------------------------------------------------------------
+# Key / Value Output
+#------------------------------------------------------------------------------
+
+house_kv() {
+
+    local key="$1"
+    local value="$2"
+
+    printf " %-18s %s\n" "${key}" "${value}"
 
 }
