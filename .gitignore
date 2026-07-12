@@ -1,0 +1,24 @@
+# Editor
+
+*~
+*.swp
+*.swo
+
+# OS
+
+.DS_Store
+Thumbs.db
+
+# Python
+
+__pycache__/
+
+# Temporary
+
+tmp/
+scratch/
+
+# Build
+
+build/
+dist/
