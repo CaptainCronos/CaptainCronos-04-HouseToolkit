@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#==============================================================================
+#
+# Captain Cronos House Toolkit
+# Command : househelp
+#
+#==============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../lib/house_toolkit.sh
+source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+house_banner
+
+cat <<EOF
+Available Commands
+------------------
+
+househelp
+    Display this help screen.
+
+housestats
+    Display House of Tartarus repository statistics.
+
+Planned Commands
+----------------
+
+houseindex
+housevalidate
+housepreview
+housebuild
+housemember
+housecard
+houserelease
+housepublish
+
+EOF
