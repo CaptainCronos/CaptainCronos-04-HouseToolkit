@@ -15,13 +15,13 @@ house_banner
 
 house_section "Available Commands"
 
-house_kv "househelp"  "Display this help screen."
-house_kv "housestats" "Display repository statistics."
-house_kv "houseindex" "Generate ASSET_INDEX.md for a repository."
+house_kv "househelp"     "Display this help screen."
+house_kv "housestats"    "Display repository statistics."
+house_kv "houseindex"    "Generate ASSET_INDEX.md for a repository."
+house_kv "housevalidate" "Validate required House repository structure."
 
 house_section "Planned Commands"
 
-printf "housevalidate\n"
 printf "housepreview\n"
 printf "housebuild\n"
 printf "housemember\n"
