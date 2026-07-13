@@ -30,7 +30,7 @@ REPO_NAME="$(house_repo_name "$REPO_ROOT")"
 BRANCH="$(house_git_branch "$REPO_ROOT")"
 COMMIT="$(house_git_commit "$REPO_ROOT")"
 INDEX_PATH="${REPO_ROOT}/${INDEX_NAME}"
-TEMP_PATH="$(mktemp "${INDEX_PATH}.tmp.XXXXXX")"
+TEMP_PATH="$(mktemp "${TMPDIR:-/tmp}/houseindex.XXXXXX")"
 
 cleanup() {
     rm -f "$TEMP_PATH"
