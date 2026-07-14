@@ -4,7 +4,7 @@
 # Captain Cronos House Toolkit
 #
 # Command : housevalidate
-# Purpose : Validate the minimum structure required for a House repository.
+# Purpose : Detect and validate Toolkit and House repositories.
 #
 #==============================================================================
 
@@ -16,71 +16,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+# shellcheck source=../lib/validation.sh
+source "${SCRIPT_DIR}/../lib/validation.sh"
 
 TARGET="${1:-$PWD}"
-PASS_COUNT=0
-WARN_COUNT=0
-FAIL_COUNT=0
-
-print_result() {
-    local label="$1"
-    local result="$2"
-    local detail="${3:-}"
-    local color="$C_RESET"
-
-    case "$result" in
-        PASS)
-            color="$C_GREEN"
-            ((PASS_COUNT += 1))
-            ;;
-        WARN)
-            color="$C_YELLOW"
-            ((WARN_COUNT += 1))
-            ;;
-        FAIL)
-            color="$C_RED"
-            ((FAIL_COUNT += 1))
-            ;;
-        *)
-            house_error "Unknown validation result: $result"
-            exit 2
-            ;;
-    esac
-
-    printf ' %-34s %b%-4s%b' "$label" "$color" "$result" "$C_RESET"
-    [[ -n "$detail" ]] && printf '  %s' "$detail"
-    printf '\n'
-}
-
-check_file() {
-    local root="$1"
-    local path="$2"
-
-    if [[ -f "$root/$path" ]]; then
-        print_result "$path" PASS
-    else
-        print_result "$path" FAIL "missing required file"
-    fi
-}
-
-check_directory() {
-    local root="$1"
-    local path="$2"
-
-    if [[ -d "$root/$path" ]]; then
-        print_result "$path/" PASS
-    else
-        print_result "$path/" FAIL "missing required directory"
-    fi
-}
 
 house_banner
 house_section "House Validation"
+house_validation_reset
 
 if ! house_is_git_repo "$TARGET"; then
-    print_result "Git repository" FAIL "${TARGET}"
-    printf '\nOverall Status: %bFAIL%b\n' "$C_RED" "$C_RESET"
-    exit 2
+    house_validation_result FAIL "Git repository" "$TARGET"
+    house_validation_summary
+    exit $?
 fi
 
 REPO_ROOT="$(house_repo_root "$TARGET")"
@@ -90,53 +38,32 @@ house_kv "Repository" "$REPO_NAME"
 house_kv "Path" "$REPO_ROOT"
 
 house_section "Repository"
-print_result "Git repository" PASS
+house_validation_result PASS "Git repository"
 
 if house_git_clean "$REPO_ROOT"; then
-    print_result "Working tree" PASS "clean"
+    house_validation_result PASS "Working tree" "clean"
 else
-    print_result "Working tree" WARN "uncommitted or untracked changes"
+    house_validation_result WARN "Working tree" "uncommitted or untracked changes"
 fi
 
-house_section "Required Files"
-for required_file in README.md LICENSE VERSION CHANGELOG.md ROADMAP.md; do
-    check_file "$REPO_ROOT" "$required_file"
-done
-
-house_section "Required Directories"
-for required_directory in branding templates members docs; do
-    check_directory "$REPO_ROOT" "$required_directory"
-done
-
-house_section "Executable Commands"
-mapfile -d '' BIN_FILES < <(
-    git -C "$REPO_ROOT" ls-files -z -- 'bin/*'
-)
-
-if [[ ${#BIN_FILES[@]} -eq 0 ]]; then
-    print_result "Tracked files under bin/" WARN "none found"
+if house_detect_repository_profile "$REPO_ROOT"; then
+    house_validation_result INFO "Repository profile" \
+        "${HOUSE_REPOSITORY_PROFILE} (${HOUSE_PROFILE_SOURCE})"
 else
-    for command_path in "${BIN_FILES[@]}"; do
-        if [[ -x "$REPO_ROOT/$command_path" ]]; then
-            print_result "$command_path" PASS
-        else
-            print_result "$command_path" FAIL "not executable"
-        fi
-    done
+    case "$HOUSE_PROFILE_SOURCE" in
+        "conflicting markers")
+            house_validation_result FAIL "Repository profile" \
+                "both .house-toolkit and .house-repository are present"
+            ;;
+        *)
+            house_validation_result FAIL "Repository profile" \
+                "not recognized; add .house-toolkit or .house-repository"
+            ;;
+    esac
+
+    house_validation_summary
+    exit $?
 fi
 
-house_section "Summary"
-house_kv "Passed" "$PASS_COUNT"
-house_kv "Warnings" "$WARN_COUNT"
-house_kv "Failed" "$FAIL_COUNT"
-
-if (( FAIL_COUNT > 0 )); then
-    printf '\nOverall Status: %bFAIL%b\n' "$C_RED" "$C_RESET"
-    exit 2
-elif (( WARN_COUNT > 0 )); then
-    printf '\nOverall Status: %bWARN%b\n' "$C_YELLOW" "$C_RESET"
-    exit 1
-else
-    printf '\nOverall Status: %bPASS%b\n' "$C_GREEN" "$C_RESET"
-    exit 0
-fi
+house_validate_repository "$REPO_ROOT" "$HOUSE_REPOSITORY_PROFILE"
+house_validation_summary

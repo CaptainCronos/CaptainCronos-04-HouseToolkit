@@ -18,7 +18,7 @@ house_section "Available Commands"
 house_kv "househelp"     "Display this help screen."
 house_kv "housestats"    "Display repository statistics."
 house_kv "houseindex"    "Generate ASSET_INDEX.md for a repository."
-house_kv "housevalidate" "Validate required House repository structure."
+house_kv "housevalidate" "Validate Toolkit or House repository structure."
 
 house_section "Planned Commands"
 

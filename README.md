@@ -12,6 +12,14 @@ Current Commands
 
 - househelp
 - housestats
+- houseindex
+- housevalidate
+
+## Repository profiles
+
+`housevalidate` recognizes Toolkit repositories by `.house-toolkit` and House
+repositories by `.house-repository`. Repositories without a marker use legacy
+directory detection.
 
 Status
 
