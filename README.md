@@ -14,6 +14,17 @@ Current Commands
 - housestats
 - houseindex
 - housevalidate
+- houserelease
+
+## HouseRelease
+
+HouseRelease is the packaging stage between HouseCard asset generation and
+HousePublish. It collects generated assets in format-specific directories under
+`release/`; it does not render cards.
+
+Use `houserelease status` to inspect package counts and manifests,
+`houserelease list` to list available packages, `houserelease clean` to remove
+generated package files, and `houserelease build` to verify packaging readiness.
 
 ## Repository profiles
 

@@ -58,6 +58,21 @@ output, and initialization metadata. Future rendering engines will consume this
 file to generate SVG, PDF, PNG, HTML, and print assets without changing the card
 schema. HouseCard does not currently render or print assets.
 
+## HouseRelease
+
+HouseRelease is the packaging stage after HouseCard and before HousePublish:
+
+```text
+housemember -> housecard -> houserelease -> housepublish
+```
+
+HouseRelease collects generated assets and prepares release packages. It does
+not render cards. Packages are organized by output format in `release/pdf/`,
+`release/png/`, `release/jpg/`, and `release/zip/`.
+
+Like all Toolkit commands, HouseRelease obtains repository locations through
+`lib/paths.sh`; its behavior is independent of the caller's working directory.
+
 ## Branding
 
 Branding stores:

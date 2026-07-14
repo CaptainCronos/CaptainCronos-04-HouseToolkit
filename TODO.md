@@ -7,5 +7,5 @@
 3. Business Cards
 4. Branding
 5. Website
-6. Publishing
+6. Publishing — HouseRelease Initial Framework Complete
 7. Maintenance
