@@ -23,10 +23,10 @@ house_kv "houseindex"    "Generate ASSET_INDEX.md for a repository."
 house_kv "housevalidate" "Validate Toolkit or House repository structure."
 house_kv "housemember"   "Manage HouseToolkit members."
 house_kv "housecard"     "Initialize HouseCard metadata for a member."
+house_kv "housepreview"  "Preview generated HouseCards."
 house_kv "houserelease"  "Prepare and inspect release packages."
 
 house_section "Planned Commands"
 
-printf "housepreview\n"
 printf "housebuild\n"
 printf "housepublish\n"

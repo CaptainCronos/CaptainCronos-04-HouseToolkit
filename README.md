@@ -14,13 +14,30 @@ Current Commands
 - housestats
 - houseindex
 - housevalidate
+- housemember
+- housecard
+- housepreview
 - houserelease
+
+## HousePreview
+
+HousePreview is the inspection stage between HouseCard and HouseRelease. It
+provides a workspace for ASCII, HTML, and PNG previews without printing,
+packaging, publishing, or exporting PDFs. Rendering is not implemented in this
+initial framework.
+
+Use `housepreview status` to inspect the workspace, `housepreview list` to list
+available previews, `housepreview clean` to remove generated preview files,
+`housepreview build` to verify repository readiness, and
+`housepreview member <member-id>` to verify that a member is ready to preview.
+Cleanup removes only paths tracked in the generated-preview manifest and
+preserves `.gitkeep` and manually created workspace files.
 
 ## HouseRelease
 
-HouseRelease is the packaging stage between HouseCard asset generation and
-HousePublish. It collects generated assets in format-specific directories under
-`release/`; it does not render cards.
+HouseRelease is the packaging stage between HousePreview and HousePublish. It
+collects generated assets in format-specific directories under `release/`; it
+does not render cards.
 
 Use `houserelease status` to inspect package counts and manifests,
 `houserelease list` to list available packages, `houserelease clean` to remove

@@ -22,3 +22,13 @@ scratch/
 
 build/
 dist/
+
+# HousePreview generated workspace
+
+preview/.housepreview-generated
+preview/ascii/*
+preview/html/*
+preview/png/*
+!preview/ascii/.gitkeep
+!preview/html/.gitkeep
+!preview/png/.gitkeep

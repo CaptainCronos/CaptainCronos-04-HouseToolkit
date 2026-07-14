@@ -58,12 +58,23 @@ output, and initialization metadata. Future rendering engines will consume this
 file to generate SVG, PDF, PNG, HTML, and print assets without changing the card
 schema. HouseCard does not currently render or print assets.
 
+## HousePreview
+
+HousePreview is the inspection stage after HouseCard and before HouseRelease.
+It provides visual and text previews of generated cards under `preview/ascii/`,
+`preview/html/`, and `preview/png/`. The initial framework validates readiness
+and inspects the workspace; it does not render images or HTML.
+
+HousePreview does not print, export PDFs, package releases, or publish. Its
+repository paths come from `lib/paths.sh`, so every command works independently
+of the caller's current working directory.
+
 ## HouseRelease
 
-HouseRelease is the packaging stage after HouseCard and before HousePublish:
+HouseRelease is the packaging stage after HousePreview and before HousePublish:
 
 ```text
-housemember -> housecard -> houserelease -> housepublish
+housemember -> housecard -> housepreview -> houserelease -> housepublish
 ```
 
 HouseRelease collects generated assets and prepares release packages. It does

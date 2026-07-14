@@ -91,3 +91,9 @@ house_release_dir() {
     repo_root="$(house_find_repo_root)" || return 1
     printf '%s/release\n' "$repo_root"
 }
+
+house_preview_dir() {
+    local repo_root
+    repo_root="$(house_find_repo_root)" || return 1
+    printf '%s/preview\n' "$repo_root"
+}
