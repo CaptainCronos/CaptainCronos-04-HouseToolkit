@@ -14,11 +14,14 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=../lib/paths.sh
+source "${SCRIPT_DIR}/../lib/paths.sh"
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 
-TARGET="${1:-$PWD}"
 INDEX_NAME="ASSET_INDEX.md"
+DEFAULT_REPO_ROOT="$(house_find_repo_root)"
+TARGET="${1:-$DEFAULT_REPO_ROOT}"
 
 if ! house_is_git_repo "$TARGET"; then
     house_error "Not a Git repository: $TARGET"

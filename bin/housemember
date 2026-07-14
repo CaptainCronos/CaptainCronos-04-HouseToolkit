@@ -11,6 +11,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../lib/paths.sh
+source "${SCRIPT_DIR}/../lib/paths.sh"
+
 fail() {
     printf 'FAIL\n\n%s\n' "$1" >&2
     exit 2
@@ -37,7 +42,7 @@ if [[ ! "$display_name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
 fi
 
 member_id="${display_name,,}"
-members_dir="${PWD}/members"
+members_dir="$(house_members_dir)"
 member_dir="${members_dir}/${member_id}"
 
 if [[ -e "$member_dir" ]]; then

@@ -19,6 +19,17 @@ A House Repository contains:
 
 along with the management commands.
 
+## Repository Path Abstraction
+
+`lib/paths.sh` is the canonical source for repository filesystem locations. It
+locates the repository root from the executing script and the repository marker
+(`.house-toolkit` or `.house-repository`), so command behavior is independent of
+the caller's current working directory.
+
+All commands and supporting libraries must obtain repository paths through
+`lib/paths.sh`. They must not build repository paths from the current working
+directory.
+
 ## Member
 
 A Member represents one individual.

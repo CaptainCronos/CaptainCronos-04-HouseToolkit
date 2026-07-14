@@ -18,7 +18,11 @@ HOUSE_TOOLKIT_LOADED=1
 #------------------------------------------------------------------------------
 
 HOUSE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOUSE_ROOT="$(cd "${HOUSE_LIB_DIR}/.." && pwd)"
+
+# shellcheck source=paths.sh
+source "${HOUSE_LIB_DIR}/paths.sh"
+
+HOUSE_ROOT="$(house_find_repo_root)"
 
 #------------------------------------------------------------------------------
 # Version
@@ -124,13 +128,13 @@ house_banner() {
 #------------------------------------------------------------------------------
 
 house_repo_root() {
-    local target="${1:-$PWD}"
+    local target="${1:-$(house_find_repo_root)}"
 
     git -C "$target" rev-parse --show-toplevel 2>/dev/null
 }
 
 house_is_git_repo() {
-    local target="${1:-$PWD}"
+    local target="${1:-$(house_find_repo_root)}"
 
     git -C "$target" rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
@@ -138,7 +142,7 @@ house_is_git_repo() {
 house_repo_name() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     basename "$root"
 }
 
@@ -149,21 +153,21 @@ house_repo_name() {
 house_git_branch() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     git -C "$root" branch --show-current 2>/dev/null
 }
 
 house_git_clean() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     [[ -z "$(git -C "$root" status --porcelain 2>/dev/null)" ]]
 }
 
 house_git_commit() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     git -C "$root" rev-parse --short HEAD 2>/dev/null
 }
 
@@ -174,34 +178,34 @@ house_git_commit() {
 house_directory_count() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     find "$root" -mindepth 1 -path "$root/.git" -prune -o -type d -print | wc -l
 }
 
 house_file_count() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     find "$root" -path "$root/.git" -prune -o -type f -print | wc -l
 }
 
 house_markdown_count() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     find "$root" -path "$root/.git" -prune -o -type f -iname '*.md' -print | wc -l
 }
 
 house_png_count() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     find "$root" -path "$root/.git" -prune -o -type f -iname '*.png' -print | wc -l
 }
 
 house_repository_size() {
     local root
 
-    root="$(house_repo_root "${1:-$PWD}")" || return 1
+    root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     du -sh --exclude='.git' "$root" 2>/dev/null | awk '{print $1}'
 }

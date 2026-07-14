@@ -12,6 +12,9 @@ HOUSE_VALIDATION_LOADED=1
 
 HOUSE_VALIDATION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=paths.sh
+source "${HOUSE_VALIDATION_DIR}/paths.sh"
+
 # shellcheck source=validators/toolkit.sh
 source "${HOUSE_VALIDATION_DIR}/validators/toolkit.sh"
 # shellcheck source=validators/house.sh
