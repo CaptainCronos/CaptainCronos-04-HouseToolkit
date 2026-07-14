@@ -26,7 +26,4 @@ house_kv "housecard"     "Initialize HouseCard metadata for a member."
 house_kv "housebuild"    "Validate HouseCard build readiness."
 house_kv "housepreview"  "Preview generated HouseCards."
 house_kv "houserelease"  "Prepare and inspect release packages."
-
-house_section "Planned Commands"
-
-printf "housepublish\n"
+house_kv "housepublish"  "Publish an already-built release."

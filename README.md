@@ -19,6 +19,7 @@ Current Commands
 - housebuild
 - housepreview
 - houserelease
+- housepublish
 
 ## HouseBuild
 
@@ -56,6 +57,20 @@ does not render cards.
 Use `houserelease status` to inspect package counts and manifests,
 `houserelease list` to list available packages, `houserelease clean` to remove
 generated package files, and `houserelease build` to verify packaging readiness.
+
+## HousePublish
+
+HousePublish is the final Toolkit stage. It is responsible only for publishing
+an already-built release. The initial framework provides deterministic status,
+listing, validation, publishing, cleanup, and help placeholders; it does not
+package or upload anything.
+
+Its workspace contains `publish/logs/`, `publish/packages/`, and
+`publish/manifests/`. Use `housepublish status` to inspect publish readiness,
+`housepublish list` to list staged packages and manifests, `housepublish
+validate` to run the validation placeholder, `housepublish publish` to run the
+publishing placeholder, and `housepublish clean` to remove generated artifacts
+from the publish workspace while preserving `.gitkeep` files.
 
 ## Repository profiles
 

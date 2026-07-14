@@ -105,6 +105,26 @@ not render cards. Packages are organized by output format in `release/pdf/`,
 Like all Toolkit commands, HouseRelease obtains repository locations through
 `lib/paths.sh`; its behavior is independent of the caller's working directory.
 
+## HousePublish
+
+HousePublish is the final stage of the Toolkit pipeline. It accepts only an
+already-built release and is responsible only for publishing it:
+
+```text
+housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
+```
+
+The publish workspace is organized under `publish/logs/`, `publish/packages/`,
+and `publish/manifests/`. Generated publish artifacts are not source release
+packages; cleanup is confined to regular files in these workspace directories
+and preserves `.gitkeep` placeholders.
+
+The initial framework implements command and workspace structure only.
+Validation and publishing are deterministic placeholders, and no command
+packages or uploads a release. HousePublish obtains its repository location
+through `lib/paths.sh`, so it is independent of the caller's current working
+directory.
+
 ## Branding
 
 Branding stores:
@@ -136,5 +156,4 @@ User-authored files should never be overwritten automatically.
 - `housemember`
 - `housebrand`
 - `housewebsite`
-- `housepublish`
 - `houseupdate`
