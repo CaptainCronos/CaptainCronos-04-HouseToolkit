@@ -21,11 +21,6 @@ housepublish_usage() {
         '  help       Display this help screen.'
 }
 
-housepublish_usage_error() {
-    housepublish_usage >&2
-    return 2
-}
-
 housepublish_file_paths() {
     local directory="$1"
 

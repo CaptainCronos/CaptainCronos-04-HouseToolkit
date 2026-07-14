@@ -15,16 +15,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
+
+housemember_usage() {
+    printf 'Usage: housemember add\n'
+}
 
 fail() {
     printf 'FAIL\n\n%s\n' "$1" >&2
     exit 2
 }
 
-if [[ "${1:-}" != "add" || $# -ne 1 ]]; then
-    printf 'Usage: housemember add\n' >&2
-    exit 2
+if house_cli_is_help "${1:-}"; then
+    house_cli_expect_args "$#" 1 1 housemember_usage
+    housemember_usage
+    exit 0
 fi
+
+if [[ "${1:-}" != "add" ]]; then
+    house_cli_usage_error housemember_usage
+fi
+house_cli_expect_args "$#" 1 1 housemember_usage
 
 printf 'Member ID: '
 if ! IFS= read -r raw_member_id; then

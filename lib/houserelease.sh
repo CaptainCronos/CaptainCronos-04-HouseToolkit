@@ -19,11 +19,6 @@ houserelease_usage() {
         '  build     Verify release readiness.'
 }
 
-houserelease_usage_error() {
-    houserelease_usage >&2
-    return 2
-}
-
 houserelease_package_count() {
     local release_dir="$1"
     local format="$2"

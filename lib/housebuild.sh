@@ -20,11 +20,6 @@ housebuild_usage() {
         '  all                  Enumerate all build-ready members.'
 }
 
-housebuild_usage_error() {
-    housebuild_usage >&2
-    return 2
-}
-
 housebuild_member_count() {
     local members_dir
 

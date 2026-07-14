@@ -16,8 +16,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+houseindex_usage() {
+    printf 'Usage: houseindex [repository-path]\n'
+}
+
+if house_cli_is_help_option "${1:-}"; then
+    house_cli_expect_args "$#" 1 1 houseindex_usage
+    houseindex_usage
+    exit 0
+fi
+house_cli_expect_args "$#" 0 1 houseindex_usage
 
 INDEX_NAME="ASSET_INDEX.md"
 DEFAULT_REPO_ROOT="$(house_find_repo_root)"

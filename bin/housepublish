@@ -13,11 +13,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
 
-if ! REPO_ROOT="$(house_find_repo_root)"; then
-    printf ' FAIL  Repository                         not recognized as HouseToolkit\n' >&2
-    exit 2
-fi
+REPO_ROOT="$(house_cli_repo_root)"
 
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
@@ -27,31 +26,31 @@ source "${SCRIPT_DIR}/../lib/validation.sh"
 source "${SCRIPT_DIR}/../lib/housepublish.sh"
 
 case "${1:-}" in
-    ""|help)
-        [[ $# -le 1 ]] || housepublish_usage_error
+    ""|-h|--help|help)
+        house_cli_expect_args "$#" 0 1 housepublish_usage
         housepublish_usage
         ;;
     status)
-        [[ $# -eq 1 ]] || housepublish_usage_error
+        house_cli_expect_args "$#" 1 1 housepublish_usage
         housepublish_status "$REPO_ROOT"
         ;;
     list)
-        [[ $# -eq 1 ]] || housepublish_usage_error
+        house_cli_expect_args "$#" 1 1 housepublish_usage
         housepublish_list "$REPO_ROOT"
         ;;
     validate)
-        [[ $# -eq 1 ]] || housepublish_usage_error
+        house_cli_expect_args "$#" 1 1 housepublish_usage
         housepublish_validate "$REPO_ROOT"
         ;;
     publish)
-        [[ $# -eq 1 ]] || housepublish_usage_error
+        house_cli_expect_args "$#" 1 1 housepublish_usage
         housepublish_publish
         ;;
     clean)
-        [[ $# -eq 1 ]] || housepublish_usage_error
+        house_cli_expect_args "$#" 1 1 housepublish_usage
         housepublish_clean
         ;;
     *)
-        housepublish_usage_error
+        house_cli_usage_error housepublish_usage
         ;;
 esac

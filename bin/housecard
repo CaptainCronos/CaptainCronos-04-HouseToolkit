@@ -15,11 +15,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
 
-if ! REPO_ROOT="$(house_find_repo_root)"; then
-    printf ' FAIL  Repository                         not recognized as HouseToolkit\n' >&2
-    exit 2
-fi
+REPO_ROOT="$(house_cli_repo_root)"
 
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
@@ -27,6 +26,10 @@ source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 source "${SCRIPT_DIR}/../lib/validation.sh"
 # shellcheck source=../lib/housecard.sh
 source "${SCRIPT_DIR}/../lib/housecard.sh"
+
+housecard_usage() {
+    printf 'Usage: housecard create <member-id>\n'
+}
 
 validation_exit() {
     local exit_code
@@ -38,10 +41,16 @@ validation_exit() {
     exit "$exit_code"
 }
 
-if [[ "${1:-}" != "create" || $# -ne 2 ]]; then
-    printf 'Usage: housecard create <member-id>\n' >&2
-    exit 2
+if house_cli_is_help "${1:-}"; then
+    house_cli_expect_args "$#" 1 1 housecard_usage
+    housecard_usage
+    exit 0
 fi
+
+if [[ "${1:-}" != "create" ]]; then
+    house_cli_usage_error housecard_usage
+fi
+house_cli_expect_args "$#" 2 2 housecard_usage
 
 requested_member_id="$2"
 

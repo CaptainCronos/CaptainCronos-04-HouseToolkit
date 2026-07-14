@@ -6,12 +6,30 @@
 #
 #==============================================================================
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+househelp_usage() {
+    printf 'Usage: househelp\n'
+}
+
+if (( $# > 0 )); then
+    if house_cli_is_help "${1:-}"; then
+        house_cli_expect_args "$#" 1 1 househelp_usage
+    else
+        house_cli_usage_error househelp_usage
+    fi
+fi
 
 house_banner
 

@@ -20,11 +20,6 @@ housepreview_usage() {
         '  member <member-id>   Verify member preview readiness.'
 }
 
-housepreview_usage_error() {
-    housepreview_usage >&2
-    return 2
-}
-
 housepreview_type_pattern() {
     case "$1" in
         ascii) printf '%s\n' '*.txt' ;;

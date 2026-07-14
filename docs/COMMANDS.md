@@ -1,5 +1,28 @@
 # Commands
 
+## Command-line conventions
+
+Every command accepts `-h` or `--help`. Workflow commands also accept the
+`help` subcommand. Help exits with status `0`; invalid commands and argument
+counts print usage to standard error and exit with status `2`.
+
+Commands continue to resolve the repository from their installed script path,
+so they can be invoked from the repository root, `bin/`, `lib/`, or an
+unrelated working directory.
+
+```text
+househelp
+houseindex [repository-path]
+housestats [repository-path]
+housevalidate [repository-path]
+housemember add
+housecard create <member-id>
+housebuild <command>
+housepreview <command>
+houserelease <command>
+housepublish <command>
+```
+
 ## housevalidate
 
 Validate a Toolkit or House repository:

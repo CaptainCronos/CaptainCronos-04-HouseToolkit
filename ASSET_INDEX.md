@@ -7,35 +7,57 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/housemember` |
-| Commit | `9fcf2c2` |
+| Branch | `feature/standardize-cli-parsing` |
+| Commit | `c8c5d26` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 23 |
-| Directories represented | 5 |
+| Repository files | 53 |
+| Directories represented | 26 |
 | Markdown | 8 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 15 |
+| Other files | 45 |
 
 ## Files by Top-Level Directory
 
+### Repository Root
+
+- `.editorconfig`
+- `.gitignore`
+- `.house-toolkit`
+- `CHANGELOG.md`
+- `LICENSE`
+- `README.md`
+- `ROADMAP.md`
+- `TODO.md`
+- `VERSION`
+
 ### bin
 
+- `bin/housebuild`
+- `bin/housecard`
 - `bin/househelp`
 - `bin/houseindex`
 - `bin/housemember`
+- `bin/housepreview`
+- `bin/housepublish`
+- `bin/houserelease`
 - `bin/housestats`
 - `bin/housevalidate`
 
-### Repository Root
+### build
 
-- `CHANGELOG.md`
+- `build/cards/.gitkeep`
+- `build/html/.gitkeep`
+- `build/logs/.gitkeep`
+- `build/pdf/.gitkeep`
+- `build/png/.gitkeep`
+- `build/svg/.gitkeep`
 
 ### docs
 
@@ -44,27 +66,44 @@
 - `docs/DEVELOPMENT.md`
 - `docs/STANDARDS.md`
 
-### Repository Root
-
-- `.editorconfig`
-- `.gitignore`
-- `.house-toolkit`
-
 ### install
 
 - `install/install.sh`
 
 ### lib
 
+- `lib/cli.sh`
 - `lib/house_toolkit.sh`
+- `lib/housebuild.sh`
+- `lib/housecard.sh`
+- `lib/housepreview.sh`
+- `lib/housepublish.sh`
+- `lib/houserelease.sh`
+- `lib/paths.sh`
 - `lib/validation.sh`
 - `lib/validators/house.sh`
 - `lib/validators/toolkit.sh`
 
-### Repository Root
+### preview
 
-- `LICENSE`
-- `README.md`
-- `ROADMAP.md`
-- `TODO.md`
-- `VERSION`
+- `preview/ascii/.gitkeep`
+- `preview/html/.gitkeep`
+- `preview/png/.gitkeep`
+
+### publish
+
+- `publish/.gitkeep`
+- `publish/logs/.gitkeep`
+- `publish/manifests/.gitkeep`
+- `publish/packages/.gitkeep`
+
+### release
+
+- `release/jpg/.gitkeep`
+- `release/pdf/.gitkeep`
+- `release/png/.gitkeep`
+- `release/zip/.gitkeep`
+
+### tests
+
+- `tests/test_cli.sh`
