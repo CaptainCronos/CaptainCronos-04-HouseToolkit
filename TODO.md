@@ -2,8 +2,8 @@
 
 ## Milestones
 
-1. Foundation
-2. Member Management
+1. Foundation — Complete
+2. Member Management — Active
 3. Business Cards
 4. Branding
 5. Website
