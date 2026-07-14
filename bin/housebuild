@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#==============================================================================
+# Captain Cronos House Toolkit
+# Command : housebuild
+# Purpose : Validate HouseCard build readiness.
+#==============================================================================
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=../lib/paths.sh
+source "${SCRIPT_DIR}/../lib/paths.sh"
+
+if ! REPO_ROOT="$(house_find_repo_root)"; then
+    printf ' FAIL  Repository                         not recognized as HouseToolkit\n' >&2
+    exit 2
+fi
+
+# shellcheck source=../lib/house_toolkit.sh
+source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+# shellcheck source=../lib/validation.sh
+source "${SCRIPT_DIR}/../lib/validation.sh"
+# shellcheck source=../lib/housebuild.sh
+source "${SCRIPT_DIR}/../lib/housebuild.sh"
+
+case "${1:-}" in
+    "")
+        housebuild_usage
+        ;;
+    status)
+        [[ $# -eq 1 ]] || housebuild_usage_error
+        housebuild_status "$REPO_ROOT"
+        ;;
+    clean)
+        [[ $# -eq 1 ]] || housebuild_usage_error
+        housebuild_clean
+        ;;
+    build)
+        [[ $# -eq 1 ]] || housebuild_usage_error
+        housebuild_build "$REPO_ROOT"
+        ;;
+    member)
+        [[ $# -eq 2 ]] || housebuild_usage_error
+        housebuild_member "$REPO_ROOT" "$2"
+        ;;
+    all)
+        [[ $# -eq 1 ]] || housebuild_usage_error
+        housebuild_all "$REPO_ROOT"
+        ;;
+    *)
+        housebuild_usage_error
+        ;;
+esac

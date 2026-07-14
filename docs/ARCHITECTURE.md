@@ -58,9 +58,30 @@ output, and initialization metadata. Future rendering engines will consume this
 file to generate SVG, PDF, PNG, HTML, and print assets without changing the card
 schema. HouseCard does not currently render or print assets.
 
+## HouseBuild
+
+HouseBuild is the rendering-engine stage after HouseCard and before
+HousePreview:
+
+```text
+housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
+```
+
+Build artifacts are organized under `build/cards/`, `build/html/`,
+`build/png/`, `build/svg/`, `build/pdf/`, and `build/logs/`. Generated artifacts
+are ignored by Git; only the `.gitkeep` workspace placeholders are versioned.
+Cleanup removes only files recorded in the HouseBuild generated-artifact
+manifest, preserving `.gitkeep` and manually created files.
+
+The initial framework validates repository, member, HouseCard, preview,
+release, and build-workspace readiness. It does not yet render and it never
+previews, publishes, packages, prints, emails, or uploads. HouseBuild obtains
+its repository paths through `lib/paths.sh`, so it is independent of the
+caller's current working directory.
+
 ## HousePreview
 
-HousePreview is the inspection stage after HouseCard and before HouseRelease.
+HousePreview is the inspection stage after HouseBuild and before HouseRelease.
 It provides visual and text previews of generated cards under `preview/ascii/`,
 `preview/html/`, and `preview/png/`. The initial framework validates readiness
 and inspects the workspace; it does not render images or HTML.
@@ -74,7 +95,7 @@ of the caller's current working directory.
 HouseRelease is the packaging stage after HousePreview and before HousePublish:
 
 ```text
-housemember -> housecard -> housepreview -> houserelease -> housepublish
+housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
 ```
 
 HouseRelease collects generated assets and prepares release packages. It does

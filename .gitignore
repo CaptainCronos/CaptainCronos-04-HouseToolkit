@@ -18,9 +18,27 @@ __pycache__/
 tmp/
 scratch/
 
-# Build
+# Build workspace
 
-build/
+build/*
+!build/cards/
+!build/html/
+!build/png/
+!build/svg/
+!build/pdf/
+!build/logs/
+build/cards/*
+build/html/*
+build/png/*
+build/svg/*
+build/pdf/*
+build/logs/*
+!build/cards/.gitkeep
+!build/html/.gitkeep
+!build/png/.gitkeep
+!build/svg/.gitkeep
+!build/pdf/.gitkeep
+!build/logs/.gitkeep
 dist/
 
 # HousePreview generated workspace

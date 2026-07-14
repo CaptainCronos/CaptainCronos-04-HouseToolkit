@@ -16,12 +16,26 @@ Current Commands
 - housevalidate
 - housemember
 - housecard
+- housebuild
 - housepreview
 - houserelease
 
+## HouseBuild
+
+HouseBuild is the rendering-engine stage between HouseCard and HousePreview.
+Its build workspace contains `cards/`, `html/`, `png/`, `svg/`, `pdf/`, and
+`logs/` directories under `build/`. The initial framework validates readiness
+only: it does not render, preview, publish, package, print, email, or upload.
+
+Use `housebuild status` to inspect the workspace, `housebuild clean` to remove
+only manifest-tracked generated artifacts, `housebuild build` to validate every
+pipeline stage and build directory, `housebuild member <member-id>` to validate
+one member and HouseCard, and `housebuild all` to enumerate all build-ready
+members. No HouseBuild command currently generates an artifact.
+
 ## HousePreview
 
-HousePreview is the inspection stage between HouseCard and HouseRelease. It
+HousePreview is the inspection stage between HouseBuild and HouseRelease. It
 provides a workspace for ASCII, HTML, and PNG previews without printing,
 packaging, publishing, or exporting PDFs. Rendering is not implemented in this
 initial framework.
