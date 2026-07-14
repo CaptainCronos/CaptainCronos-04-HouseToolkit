@@ -47,6 +47,17 @@ Member IDs may change.
 
 UUIDs never change.
 
+## HouseCard
+
+HouseCard is the business card data model. Each member may have a `card/`
+directory containing `card.yml`, which consumes the member ID, permanent UUID,
+and display name from the member's `profile.yml`.
+
+The versioned `card.yml` schema stores organization, contact, branding, layout,
+output, and initialization metadata. Future rendering engines will consume this
+file to generate SVG, PDF, PNG, HTML, and print assets without changing the card
+schema. HouseCard does not currently render or print assets.
+
 ## Branding
 
 Branding stores:
@@ -76,7 +87,6 @@ User-authored files should never be overwritten automatically.
 ## Future Modules
 
 - `housemember`
-- `housecard`
 - `housebrand`
 - `housewebsite`
 - `housepublish`

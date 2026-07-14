@@ -46,6 +46,22 @@ house_members_dir() {
     printf '%s/members\n' "$repo_root"
 }
 
+house_member_dir() {
+    local member_id="$1"
+    local members_dir
+
+    members_dir="$(house_members_dir)" || return 1
+    printf '%s/%s\n' "$members_dir" "$member_id"
+}
+
+house_member_card_dir() {
+    local member_id="$1"
+    local member_dir
+
+    member_dir="$(house_member_dir "$member_id")" || return 1
+    printf '%s/card\n' "$member_dir"
+}
+
 house_docs_dir() {
     local repo_root
     repo_root="$(house_find_repo_root)" || return 1
