@@ -44,6 +44,8 @@ if [[ -e "$member_dir" ]]; then
     fail "Member '${member_id}' already exists."
 fi
 
+member_uuid="$(uuidgen)"
+
 mkdir -p "$members_dir"
 if ! mkdir "$member_dir"; then
     if [[ -e "$member_dir" ]]; then
@@ -64,6 +66,7 @@ printf '%s\n' \
     '' \
     'member:' \
     "  id: ${member_id}" \
+    "  uuid: ${member_uuid}" \
     "  display_name: ${display_name}" \
     '' \
     'status:' \

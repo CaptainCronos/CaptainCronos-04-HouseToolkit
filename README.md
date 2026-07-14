@@ -21,6 +21,11 @@ Current Commands
 repositories by `.house-repository`. Repositories without a marker use legacy
 directory detection.
 
+## Architecture
+
+See [HouseToolkit Architecture](docs/ARCHITECTURE.md) for the repository and
+module architecture.
+
 Status
 
 Early Development
