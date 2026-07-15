@@ -31,6 +31,8 @@ The final release assessment is recorded in
   downstream workflow metadata.
 - Produce validated, non-rendered HouseBuild handoffs for downstream stages
   while preserving legacy readiness commands.
+- Produce validated HousePreview manifests as the sole input contract for a
+  future HouseRelease pipeline.
 - Improve startup performance only where filesystem or Git work is measurable.
 
 Compatibility with v1.0.0-rc1 commands and workflows remains a release

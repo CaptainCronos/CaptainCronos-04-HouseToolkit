@@ -162,11 +162,35 @@ untracked manual files and `.gitkeep` placeholders.
 
 ### HousePreview
 
-HousePreview inspects `preview/ascii/`, `preview/html/`, and `preview/png/` and
-validates member and workspace readiness. It does not generate previews.
+`housepreview <member-id> [--force]` validates the complete HouseBuild handoff,
+including current profile and HouseCard snapshots, then creates:
 
-`housepreview clean` removes only safe, top-level preview paths recorded in
-`preview/.housepreview-generated`; manual files and `.gitkeep` are preserved.
+```text
+preview/
+├── .housepreview-generated
+├── manifests/<member-id>/
+│   ├── build.yml
+│   ├── preview.yml
+│   └── README.md
+├── ascii/
+├── html/
+└── png/
+```
+
+The copied `build.yml` proves which build was consumed. `preview.yml` defines
+expected preview paths and is the sole input contract for the future release
+pipeline. The reusable handoff validator rejects stale build snapshots,
+malformed metadata, incomplete directories, and symlink boundaries. No ASCII,
+HTML, or PNG file is rendered.
+
+Existing member preview handoffs are preserved with warning status `1`.
+Explicit `--force` refreshes only the build snapshot, `preview.yml`, and README;
+all other preview data is retained. Legacy `status`, `list`, `build`, and
+`member` readiness commands remain available.
+
+`housepreview clean` removes only safe generated paths recorded in
+`preview/.housepreview-generated`, including owned member-manifest files.
+Manual files and `.gitkeep` are preserved.
 
 ### HouseRelease
 

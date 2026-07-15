@@ -18,6 +18,7 @@ The test suite is dependency-free beyond the tools used by the Toolkit:
 bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
+bash tests/test_housepreview.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -35,6 +36,10 @@ downstream HouseBuild readiness.
 validation, predictable stage directories, duplicate and force behavior,
 non-rendering boundaries, generated-file manifests, and preservation of user
 files during rebuild and cleanup.
+
+`tests/test_housepreview.sh` verifies build-manifest consumption, reusable
+handoff validation, release metadata, predictable directories, duplicate and
+force behavior, non-rendering boundaries, cleanup, and user-file preservation.
 
 `tests/test_install.sh` uses temporary `HOME` directories. It verifies install,
 check, repair, repeat install, uninstall, collision safety, command execution
@@ -95,6 +100,8 @@ housecard create <member-id>
 housecard create <member-id> --force
 housebuild <member-id>
 housebuild <member-id> --force
+housepreview <member-id>
+housepreview <member-id> --force
 housebuild member <member-id>
 housebuild all
 housebuild build
@@ -105,10 +112,10 @@ housepublish validate
 housepublish publish
 ```
 
-Expected non-rendering behavior is part of the current contract: HouseBuild
-creates validated metadata handoffs, HousePreview validates without rendering,
-HouseRelease validates without packaging, and HousePublish validates or reports
-zero published artifacts without uploading.
+Expected non-rendering behavior is part of the current contract: HouseBuild and
+HousePreview create validated metadata handoffs, HouseRelease validates without
+packaging, and HousePublish validates or reports zero published artifacts
+without uploading.
 
 ## Release Checks
 
@@ -119,6 +126,7 @@ bash -n bin/* lib/*.sh lib/validators/*.sh install/*.sh tests/*.sh
 bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
+bash tests/test_housepreview.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

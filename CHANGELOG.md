@@ -32,6 +32,11 @@
   stage directories, and generated-file tracking.
 - Added explicit `--force` rebuilds, duplicate protection, shared safe-workspace
   helpers, and cleanup coverage that preserves user-created build assets.
+- Added a complete HousePreview pipeline that validates and snapshots HouseBuild
+  manifests, creates deterministic release handoffs, and preserves the explicit
+  non-rendering boundary.
+- Expanded preview cleanup, force recreation, symlink safety, and reusable
+  handoff validation while preserving legacy readiness commands.
 
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 

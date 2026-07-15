@@ -1,16 +1,31 @@
 #!/usr/bin/env bash
 #==============================================================================
-# HousePreview workspace inspection and readiness helpers.
+# HousePreview pipeline, workspace inspection, and readiness helpers.
 #==============================================================================
 
 [[ -n "${HOUSE_PREVIEW_LOADED:-}" ]] && return
 HOUSE_PREVIEW_LOADED=1
 
+HOUSE_PREVIEW_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=housebuild.sh
+source "${HOUSE_PREVIEW_LIB_DIR}/housebuild.sh"
+
 HOUSE_PREVIEW_TYPES=(ascii html png)
+HOUSE_PREVIEW_ERROR=""
+HOUSE_PREVIEW_RESULT=""
+HOUSE_PREVIEW_MEMBER_DIR=""
+HOUSE_PREVIEW_MANIFEST_PATH=""
+HOUSE_PREVIEW_BUILD_PATH=""
+HOUSE_PREVIEW_README_PATH=""
+HOUSE_PREVIEW_GENERATED_MANIFEST_PATH=""
 
 housepreview_usage() {
     printf '%s\n' \
-        'Usage: housepreview <command>' \
+        'Usage: housepreview <member-id> [--force]' \
+        '       housepreview <command>' \
+        '' \
+        'Prepare a validated build handoff for release without rendering.' \
         '' \
         'Commands:' \
         '  status               Display preview workspace status.' \
@@ -18,6 +33,324 @@ housepreview_usage() {
         '  clean                Remove generated preview files.' \
         '  build                Verify preview readiness.' \
         '  member <member-id>   Verify member preview readiness.'
+}
+
+housepreview_reject() {
+    HOUSE_PREVIEW_ERROR="$1"
+    return 2
+}
+
+housepreview_manifest_value() {
+    local manifest_path="$1"
+    local section="$2"
+    local key="$3"
+
+    awk -v section="$section" -v key="$key" '
+        $0 == section ":" {
+            in_section = 1
+            next
+        }
+        in_section && /^[^[:space:]#]/ {
+            exit
+        }
+        in_section && $0 ~ "^  " key ":[[:space:]]*" {
+            sub("^  " key ":[[:space:]]*", "")
+            sub(/[[:space:]]+$/, "")
+            print
+            exit
+        }
+    ' "$manifest_path"
+}
+
+housepreview_validate_handoff() {
+    local requested_member_id="$1"
+    local preview_dir
+    local preview_version
+    local preview_type
+    local section
+    local key
+    local expected
+    local actual
+    local specifications
+
+    HOUSE_PREVIEW_ERROR=""
+    HOUSE_PREVIEW_MEMBER_DIR=""
+    HOUSE_PREVIEW_MANIFEST_PATH=""
+    HOUSE_PREVIEW_BUILD_PATH=""
+    HOUSE_PREVIEW_README_PATH=""
+
+    if ! housebuild_validate_handoff "$requested_member_id"; then
+        housepreview_reject "$HOUSE_BUILD_ERROR"
+        return
+    fi
+
+    preview_dir="$(house_preview_dir)"
+    HOUSE_PREVIEW_MEMBER_DIR="$preview_dir/manifests/$HOUSE_MEMBER_ID"
+    HOUSE_PREVIEW_BUILD_PATH="$HOUSE_PREVIEW_MEMBER_DIR/build.yml"
+    HOUSE_PREVIEW_MANIFEST_PATH="$HOUSE_PREVIEW_MEMBER_DIR/preview.yml"
+    HOUSE_PREVIEW_README_PATH="$HOUSE_PREVIEW_MEMBER_DIR/README.md"
+
+    if [[ -L "$preview_dir" || -L "$preview_dir/manifests" ||
+            -L "$HOUSE_PREVIEW_MEMBER_DIR" ]]; then
+        housepreview_reject "HousePreview workspace must not contain symlinks."
+        return
+    fi
+    if [[ ! -d "$HOUSE_PREVIEW_MEMBER_DIR" ]]; then
+        housepreview_reject \
+            "Member '${HOUSE_MEMBER_ID}' does not have a preview workspace."
+        return
+    fi
+    for preview_type in "${HOUSE_PREVIEW_TYPES[@]}"; do
+        if [[ ! -d "$preview_dir/$preview_type" ||
+                -L "$preview_dir/$preview_type" ]]; then
+            housepreview_reject \
+                "HousePreview $preview_type workspace is missing or unsafe."
+            return
+        fi
+    done
+    if [[ ! -f "$HOUSE_PREVIEW_MANIFEST_PATH" ||
+            -L "$HOUSE_PREVIEW_MANIFEST_PATH" ]]; then
+        housepreview_reject \
+            "Member '${HOUSE_MEMBER_ID}' is missing preview.yml."
+        return
+    fi
+    if [[ ! -f "$HOUSE_PREVIEW_BUILD_PATH" ||
+            -L "$HOUSE_PREVIEW_BUILD_PATH" ]]; then
+        housepreview_reject \
+            "HousePreview build snapshot for '${HOUSE_MEMBER_ID}' is missing."
+        return
+    fi
+    if [[ ! -f "$HOUSE_PREVIEW_README_PATH" ||
+            -L "$HOUSE_PREVIEW_README_PATH" ]]; then
+        housepreview_reject \
+            "HousePreview README for '${HOUSE_MEMBER_ID}' is missing."
+        return
+    fi
+    if ! cmp -s "$HOUSE_BUILD_MANIFEST_PATH" "$HOUSE_PREVIEW_BUILD_PATH"; then
+        housepreview_reject \
+            "HousePreview build snapshot for '${HOUSE_MEMBER_ID}' is stale."
+        return
+    fi
+
+    preview_version="$(awk '$1 == "version:" { print $2; exit }' \
+        "$HOUSE_PREVIEW_MANIFEST_PATH")"
+    if [[ "$preview_version" != "1" ]]; then
+        housepreview_reject \
+            "HousePreview manifest for '${HOUSE_MEMBER_ID}' must be version 1."
+        return
+    fi
+
+    specifications="$(printf '%s\n' \
+        "member|id|${HOUSE_MEMBER_ID}" \
+        "member|uuid|${HOUSE_MEMBER_UUID}" \
+        "member|display_name|${HOUSE_MEMBER_DISPLAY_NAME}" \
+        "source|build|build/cards/${HOUSE_MEMBER_ID}/build.yml" \
+        "artifacts|build|preview/manifests/${HOUSE_MEMBER_ID}/build.yml" \
+        "artifacts|manifest|preview/manifests/${HOUSE_MEMBER_ID}/preview.yml" \
+        "expected_previews|ascii|preview/ascii/${HOUSE_MEMBER_ID}.txt" \
+        "expected_previews|html|preview/html/${HOUSE_MEMBER_ID}.html" \
+        "expected_previews|png|preview/png/${HOUSE_MEMBER_ID}.png" \
+        "handoff|release|preview/manifests/${HOUSE_MEMBER_ID}/preview.yml" \
+        "toolkit|version|${HOUSE_VERSION}" \
+        "toolkit|codename|${HOUSE_CODENAME}" \
+        'status|prepared|true' \
+        'status|rendered|false')"
+
+    while IFS='|' read -r section key expected; do
+        actual="$(housepreview_manifest_value \
+            "$HOUSE_PREVIEW_MANIFEST_PATH" "$section" "$key")"
+        if [[ "$actual" != "$expected" ]]; then
+            housepreview_reject \
+                "HousePreview ${section}.${key} is missing or invalid."
+            return
+        fi
+    done <<< "$specifications"
+}
+
+housepreview_write_manifest() {
+    local manifest_path="$1"
+    local member_id="$2"
+    local member_uuid="$3"
+    local display_name="$4"
+
+    printf '%s\n' \
+        'version: 1' \
+        '' \
+        'member:' \
+        "  id: ${member_id}" \
+        "  uuid: ${member_uuid}" \
+        "  display_name: ${display_name}" \
+        '' \
+        'source:' \
+        "  build: build/cards/${member_id}/build.yml" \
+        '' \
+        'artifacts:' \
+        "  build: preview/manifests/${member_id}/build.yml" \
+        "  manifest: preview/manifests/${member_id}/preview.yml" \
+        '' \
+        'expected_previews:' \
+        "  ascii: preview/ascii/${member_id}.txt" \
+        "  html: preview/html/${member_id}.html" \
+        "  png: preview/png/${member_id}.png" \
+        '' \
+        'handoff:' \
+        "  release: preview/manifests/${member_id}/preview.yml" \
+        '' \
+        'toolkit:' \
+        "  version: ${HOUSE_VERSION}" \
+        "  codename: ${HOUSE_CODENAME}" \
+        '' \
+        'status:' \
+        '  prepared: true' \
+        '  rendered: false' > "$manifest_path"
+}
+
+housepreview_write_readme() {
+    local readme_path="$1"
+    local member_id="$2"
+
+    printf '%s\n' \
+        "# HousePreview: ${member_id}" \
+        '' \
+        'This directory is the validated, non-rendered HousePreview handoff.' \
+        '' \
+        '- `build.yml` is the consumed HouseBuild manifest snapshot.' \
+        '- `preview.yml` is the sole input contract for HouseRelease.' \
+        '' \
+        'No ASCII, HTML, or PNG preview is rendered by this milestone.' \
+        > "$readme_path"
+}
+
+housepreview_create() {
+    local root="$1"
+    local requested_member_id="$2"
+    local force="$3"
+    local preview_dir
+    local preview_type
+    local member_preview_existed=0
+    local relative_base
+    local readme_path
+
+    HOUSE_PREVIEW_ERROR=""
+    HOUSE_PREVIEW_RESULT=""
+    HOUSE_PREVIEW_MEMBER_DIR=""
+    HOUSE_PREVIEW_MANIFEST_PATH=""
+    HOUSE_PREVIEW_BUILD_PATH=""
+    HOUSE_PREVIEW_README_PATH=""
+    HOUSE_PREVIEW_GENERATED_MANIFEST_PATH=""
+
+    house_validation_reset
+    house_banner
+    house_section "HousePreview Pipeline"
+
+    if ! housepreview_validate_repository "$root"; then
+        house_validation_result FAIL \
+            "HousePreview" "repository validation failed"
+        return 2
+    fi
+    house_validate_repository "$root" "$HOUSE_REPOSITORY_PROFILE"
+    if (( HOUSE_FAIL_COUNT > 0 )); then
+        house_validation_result FAIL \
+            "HousePreview" "repository validation failed"
+        return 2
+    fi
+
+    if ! housebuild_validate_handoff "$requested_member_id"; then
+        house_validation_result FAIL "HouseBuild" "$HOUSE_BUILD_ERROR"
+        house_validation_result FAIL "HousePreview" "build validation failed"
+        return 2
+    fi
+    house_validation_result PASS "Member '${HOUSE_MEMBER_ID}'" \
+        "$HOUSE_MEMBER_DIR"
+    house_validation_result PASS "HouseCard card.yml" "metadata valid"
+    house_validation_result PASS "HouseBuild build.yml" "handoff valid"
+
+    preview_dir="$(house_preview_dir)"
+    if ! house_workspace_prepare_directory "$preview_dir"; then
+        house_validation_result FAIL "Preview workspace" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+    for preview_type in "${HOUSE_PREVIEW_TYPES[@]}" manifests; do
+        if ! house_workspace_prepare_directory \
+                "$preview_dir/$preview_type"; then
+            house_validation_result FAIL "Preview workspace" \
+                "$HOUSE_WORKSPACE_ERROR"
+            return 2
+        fi
+    done
+
+    HOUSE_PREVIEW_MEMBER_DIR="$preview_dir/manifests/$HOUSE_MEMBER_ID"
+    if [[ -L "$HOUSE_PREVIEW_MEMBER_DIR" ]]; then
+        house_validation_result FAIL "Member preview workspace" \
+            "must not be a symlink"
+        return 2
+    elif [[ -d "$HOUSE_PREVIEW_MEMBER_DIR" ]]; then
+        member_preview_existed=1
+        if (( force == 0 )); then
+            house_validation_result WARN "HousePreview '${HOUSE_MEMBER_ID}'" \
+                "already exists; use --force to recreate it"
+            return 1
+        fi
+    elif [[ -e "$HOUSE_PREVIEW_MEMBER_DIR" ]]; then
+        house_validation_result FAIL "Member preview workspace" \
+            "path exists and is not a directory"
+        return 2
+    elif ! house_workspace_prepare_directory "$HOUSE_PREVIEW_MEMBER_DIR"; then
+        house_validation_result FAIL "Member preview workspace" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    HOUSE_PREVIEW_BUILD_PATH="$HOUSE_PREVIEW_MEMBER_DIR/build.yml"
+    HOUSE_PREVIEW_MANIFEST_PATH="$HOUSE_PREVIEW_MEMBER_DIR/preview.yml"
+    readme_path="$HOUSE_PREVIEW_MEMBER_DIR/README.md"
+    HOUSE_PREVIEW_README_PATH="$readme_path"
+
+    if ! house_workspace_copy_atomic \
+            "$HOUSE_BUILD_MANIFEST_PATH" "$HOUSE_PREVIEW_BUILD_PATH" ||
+            ! house_workspace_write_atomic "$HOUSE_PREVIEW_MANIFEST_PATH" \
+                housepreview_write_manifest \
+                "$HOUSE_MEMBER_ID" "$HOUSE_MEMBER_UUID" \
+                "$HOUSE_MEMBER_DISPLAY_NAME" ||
+            ! house_workspace_write_atomic "$readme_path" \
+                housepreview_write_readme "$HOUSE_MEMBER_ID"; then
+        house_validation_result FAIL "Generated preview artifacts" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    if ! housepreview_validate_handoff "$HOUSE_MEMBER_ID"; then
+        house_validation_result FAIL "Preview handoff" "$HOUSE_PREVIEW_ERROR"
+        return 2
+    fi
+
+    relative_base="manifests/$HOUSE_MEMBER_ID"
+    HOUSE_PREVIEW_GENERATED_MANIFEST_PATH="$preview_dir"
+    HOUSE_PREVIEW_GENERATED_MANIFEST_PATH+="/.housepreview-generated"
+    if ! house_workspace_record_generated \
+            "$HOUSE_PREVIEW_GENERATED_MANIFEST_PATH" \
+            "$relative_base/build.yml" \
+            "$relative_base/preview.yml" \
+            "$relative_base/README.md"; then
+        house_validation_result FAIL "Generated-file manifest" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    if (( member_preview_existed > 0 )); then
+        HOUSE_PREVIEW_RESULT="recreated"
+    else
+        HOUSE_PREVIEW_RESULT="created"
+    fi
+    house_validation_result PASS "Preview workspace" \
+        "$HOUSE_PREVIEW_MEMBER_DIR"
+    house_validation_result PASS "Build manifest snapshot" \
+        "$HOUSE_PREVIEW_RESULT"
+    house_validation_result PASS "preview.yml handoff" \
+        "$HOUSE_PREVIEW_RESULT"
+    house_validation_result PASS "Generated-file manifest" "updated"
+    house_validation_result INFO "Rendering" "not performed"
 }
 
 housepreview_type_pattern() {
@@ -118,11 +451,39 @@ housepreview_list() {
     fi
 }
 
+housepreview_clean_path_is_safe() {
+    local relative_path="$1"
+    local remainder
+    local member_id
+    local filename
+
+    house_workspace_manifest_path_is_safe "$relative_path" || return
+    case "$relative_path" in
+        ascii/*.txt|html/*.html|png/*.png)
+            remainder="${relative_path#*/}"
+            [[ "$remainder" != */* ]]
+            ;;
+        manifests/*/build.yml|manifests/*/preview.yml|manifests/*/README.md)
+            remainder="${relative_path#manifests/}"
+            member_id="${remainder%%/*}"
+            filename="${remainder#*/}"
+            [[ -n "$member_id" && "$member_id" != */* ]] || return 1
+            case "$filename" in
+                build.yml|preview.yml|README.md) return 0 ;;
+                *) return 1 ;;
+            esac
+            ;;
+        *) return 1 ;;
+    esac
+}
+
 housepreview_clean() {
     local preview_dir
+    local resolved_preview_dir
     local manifest_path
     local relative_path
     local preview_path
+    local resolved_preview_path
     local removed_count=0
     local skipped_count=0
 
@@ -133,27 +494,33 @@ housepreview_clean() {
     house_banner
     house_section "HousePreview Clean"
 
-    if [[ -f "$manifest_path" ]]; then
+    if ! resolved_preview_dir="$(realpath -e -- "$preview_dir" 2>/dev/null)"; then
+        house_validation_result PASS "Generated previews" "0 removed"
+        house_validation_result INFO "Preserved files" \
+            "preview workspace does not exist"
+        return
+    fi
+
+    if [[ -f "$manifest_path" && ! -L "$manifest_path" ]]; then
         while IFS= read -r relative_path || [[ -n "$relative_path" ]]; do
             [[ -n "$relative_path" ]] || continue
 
-            case "$relative_path" in
-                ascii/*/*.txt|html/*/*.html|png/*/*.png)
-                    ((skipped_count += 1))
-                    ;;
-                ascii/*.txt|html/*.html|png/*.png)
-                    preview_path="$preview_dir/$relative_path"
-                    if [[ -f "$preview_path" && ! -L "$preview_path" ]]; then
-                        rm -- "$preview_path"
-                        ((removed_count += 1))
-                    fi
-                    ;;
-                *)
-                    ((skipped_count += 1))
-                    ;;
-            esac
+            if ! housepreview_clean_path_is_safe "$relative_path"; then
+                ((skipped_count += 1))
+                continue
+            fi
+            preview_path="$preview_dir/$relative_path"
+            resolved_preview_path="$(realpath -e -- \
+                "$preview_path" 2>/dev/null || :)"
+            if [[ -f "$preview_path" && ! -L "$preview_path" &&
+                    "$resolved_preview_path" == "$resolved_preview_dir/"* ]]; then
+                rm -- "$preview_path"
+                ((removed_count += 1))
+            fi
         done < "$manifest_path"
         rm -- "$manifest_path"
+    elif [[ -L "$manifest_path" ]]; then
+        ((skipped_count += 1))
     fi
 
     house_validation_result PASS "Generated previews" "$removed_count removed"

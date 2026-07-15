@@ -18,6 +18,9 @@ HOUSE_BUILD_ERROR=""
 HOUSE_BUILD_RESULT=""
 HOUSE_BUILD_MEMBER_DIR=""
 HOUSE_BUILD_MANIFEST_PATH=""
+HOUSE_BUILD_GENERATED_MANIFEST_PATH=""
+HOUSE_BUILD_PROFILE_PATH=""
+HOUSE_BUILD_CARD_PATH=""
 
 housebuild_usage() {
     printf '%s\n' \
@@ -37,6 +40,127 @@ housebuild_usage() {
 housebuild_reject() {
     HOUSE_BUILD_ERROR="$1"
     return 2
+}
+
+housebuild_manifest_value() {
+    local manifest_path="$1"
+    local section="$2"
+    local key="$3"
+
+    awk -v section="$section" -v key="$key" '
+        $0 == section ":" {
+            in_section = 1
+            next
+        }
+        in_section && /^[^[:space:]#]/ {
+            exit
+        }
+        in_section && $0 ~ "^  " key ":[[:space:]]*" {
+            sub("^  " key ":[[:space:]]*", "")
+            sub(/[[:space:]]+$/, "")
+            print
+            exit
+        }
+    ' "$manifest_path"
+}
+
+housebuild_validate_handoff() {
+    local requested_member_id="$1"
+    local build_dir
+    local build_version
+    local section
+    local key
+    local expected
+    local actual
+    local specifications
+
+    HOUSE_BUILD_ERROR=""
+    HOUSE_BUILD_MEMBER_DIR=""
+    HOUSE_BUILD_MANIFEST_PATH=""
+    HOUSE_BUILD_GENERATED_MANIFEST_PATH=""
+    HOUSE_BUILD_PROFILE_PATH=""
+    HOUSE_BUILD_CARD_PATH=""
+
+    if ! housecard_validate_metadata "$requested_member_id"; then
+        housebuild_reject "$HOUSE_CARD_ERROR"
+        return
+    fi
+
+    build_dir="$(house_build_dir)"
+    HOUSE_BUILD_MEMBER_DIR="$build_dir/cards/$HOUSE_MEMBER_ID"
+    HOUSE_BUILD_PROFILE_PATH="$HOUSE_BUILD_MEMBER_DIR/profile.yml"
+    HOUSE_BUILD_CARD_PATH="$HOUSE_BUILD_MEMBER_DIR/card.yml"
+    HOUSE_BUILD_MANIFEST_PATH="$HOUSE_BUILD_MEMBER_DIR/build.yml"
+
+    if [[ -L "$build_dir" || -L "$build_dir/cards" ||
+            -L "$HOUSE_BUILD_MEMBER_DIR" ]]; then
+        housebuild_reject "HouseBuild workspace must not contain symlinks."
+        return
+    fi
+    if [[ ! -d "$HOUSE_BUILD_MEMBER_DIR" ]]; then
+        housebuild_reject \
+            "Member '${HOUSE_MEMBER_ID}' does not have a build workspace."
+        return
+    fi
+    if [[ ! -f "$HOUSE_BUILD_MANIFEST_PATH" ||
+            -L "$HOUSE_BUILD_MANIFEST_PATH" ]]; then
+        housebuild_reject \
+            "Member '${HOUSE_MEMBER_ID}' is missing build.yml."
+        return
+    fi
+    if [[ ! -f "$HOUSE_BUILD_PROFILE_PATH" ||
+            -L "$HOUSE_BUILD_PROFILE_PATH" ||
+            ! -f "$HOUSE_BUILD_CARD_PATH" ||
+            -L "$HOUSE_BUILD_CARD_PATH" ]]; then
+        housebuild_reject \
+            "HouseBuild snapshots for '${HOUSE_MEMBER_ID}' are incomplete."
+        return
+    fi
+    if ! cmp -s "$HOUSE_MEMBER_PROFILE_PATH" "$HOUSE_BUILD_PROFILE_PATH" ||
+            ! cmp -s "$HOUSE_CARD_PATH" "$HOUSE_BUILD_CARD_PATH"; then
+        housebuild_reject \
+            "HouseBuild snapshots for '${HOUSE_MEMBER_ID}' are stale."
+        return
+    fi
+
+    build_version="$(awk '$1 == "version:" { print $2; exit }' \
+        "$HOUSE_BUILD_MANIFEST_PATH")"
+    if [[ "$build_version" != "1" ]]; then
+        housebuild_reject \
+            "HouseBuild manifest for '${HOUSE_MEMBER_ID}' must be version 1."
+        return
+    fi
+
+    specifications="$(printf '%s\n' \
+        "member|id|${HOUSE_MEMBER_ID}" \
+        "member|uuid|${HOUSE_MEMBER_UUID}" \
+        "member|display_name|${HOUSE_MEMBER_DISPLAY_NAME}" \
+        "source|profile|members/${HOUSE_MEMBER_ID}/profile.yml" \
+        "source|housecard|members/${HOUSE_MEMBER_ID}/card/card.yml" \
+        "artifacts|profile|build/cards/${HOUSE_MEMBER_ID}/profile.yml" \
+        "artifacts|housecard|build/cards/${HOUSE_MEMBER_ID}/card.yml" \
+        "artifacts|manifest|build/cards/${HOUSE_MEMBER_ID}/build.yml" \
+        "expected_outputs|svg|build/svg/${HOUSE_MEMBER_ID}.svg" \
+        "expected_outputs|pdf|build/pdf/${HOUSE_MEMBER_ID}.pdf" \
+        "expected_outputs|png|build/png/${HOUSE_MEMBER_ID}.png" \
+        "expected_outputs|html|build/html/${HOUSE_MEMBER_ID}.html" \
+        "handoff|preview|build/cards/${HOUSE_MEMBER_ID}/build.yml" \
+        "handoff|release|build/cards/${HOUSE_MEMBER_ID}/build.yml" \
+        "handoff|publish|build/cards/${HOUSE_MEMBER_ID}/build.yml" \
+        "toolkit|version|${HOUSE_VERSION}" \
+        "toolkit|codename|${HOUSE_CODENAME}" \
+        'status|built|true' \
+        'status|rendered|false')"
+
+    while IFS='|' read -r section key expected; do
+        actual="$(housebuild_manifest_value \
+            "$HOUSE_BUILD_MANIFEST_PATH" "$section" "$key")"
+        if [[ "$actual" != "$expected" ]]; then
+            housebuild_reject \
+                "HouseBuild ${section}.${key} is missing or invalid."
+            return
+        fi
+    done <<< "$specifications"
 }
 
 housebuild_write_manifest() {
@@ -116,6 +240,9 @@ housebuild_create() {
     HOUSE_BUILD_RESULT=""
     HOUSE_BUILD_MEMBER_DIR=""
     HOUSE_BUILD_MANIFEST_PATH=""
+    HOUSE_BUILD_GENERATED_MANIFEST_PATH=""
+    HOUSE_BUILD_PROFILE_PATH=""
+    HOUSE_BUILD_CARD_PATH=""
 
     house_validation_reset
     house_banner
@@ -180,6 +307,9 @@ housebuild_create() {
     card_target="$HOUSE_BUILD_MEMBER_DIR/card.yml"
     manifest_target="$HOUSE_BUILD_MEMBER_DIR/build.yml"
     readme_target="$HOUSE_BUILD_MEMBER_DIR/README.md"
+    HOUSE_BUILD_PROFILE_PATH="$profile_target"
+    HOUSE_BUILD_CARD_PATH="$card_target"
+    HOUSE_BUILD_MANIFEST_PATH="$manifest_target"
 
     if ! house_workspace_copy_atomic \
             "$HOUSE_MEMBER_PROFILE_PATH" "$profile_target" ||
@@ -196,8 +326,9 @@ housebuild_create() {
     fi
 
     relative_base="cards/$HOUSE_MEMBER_ID"
-    HOUSE_BUILD_MANIFEST_PATH="$build_dir/.housebuild-generated"
-    if ! house_workspace_record_generated "$HOUSE_BUILD_MANIFEST_PATH" \
+    HOUSE_BUILD_GENERATED_MANIFEST_PATH="$build_dir/.housebuild-generated"
+    if ! house_workspace_record_generated \
+            "$HOUSE_BUILD_GENERATED_MANIFEST_PATH" \
             "$relative_base/profile.yml" \
             "$relative_base/card.yml" \
             "$relative_base/build.yml" \

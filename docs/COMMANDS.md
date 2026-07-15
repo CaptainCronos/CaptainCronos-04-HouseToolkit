@@ -141,6 +141,8 @@ subcommand renders an artifact.
 ### `housepreview`
 
 ```text
+housepreview <member-id>
+housepreview <member-id> --force
 housepreview status
 housepreview list
 housepreview clean
@@ -149,13 +151,21 @@ housepreview member <member-id>
 housepreview help
 ```
 
+- Direct member previews validate and consume
+  `build/cards/<member-id>/build.yml`, then create a build snapshot,
+  `preview.yml`, and README below `preview/manifests/<member-id>/`. The preview
+  manifest is the sole HouseRelease input contract; nothing is rendered.
+- A duplicate direct preview is preserved with status `1`. `--force` refreshes
+  only Toolkit-owned handoff files while retaining unrelated preview data.
 - `status` reports preview workspace and member counts.
 - `list` lists existing `.txt`, `.html`, and `.png` preview files.
 - `clean` removes only safe files recorded in the generated-preview manifest.
 - `build` validates repository, preview, member, and release directories.
 - `member` validates one member for preview readiness.
 
-No subcommand generates a preview.
+Direct previews return `0` after creation or recreation, `1` when an existing
+handoff is preserved, and `2` for invalid usage or validation failures. No
+subcommand renders a preview.
 
 ### `houserelease`
 

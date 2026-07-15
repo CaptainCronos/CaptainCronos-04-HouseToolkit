@@ -107,6 +107,8 @@ assert_success "housebuild validates the pipeline workspace"
 
 run_command "$FIXTURE/bin/housepreview" member captain
 assert_success "housepreview validates one member"
+run_command "$FIXTURE/bin/housepreview" captain
+assert_success "housepreview creates a release handoff"
 run_command "$FIXTURE/bin/housepreview" build
 assert_success "housepreview validates its workspace"
 

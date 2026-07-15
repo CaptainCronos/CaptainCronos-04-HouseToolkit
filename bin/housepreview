@@ -3,7 +3,7 @@
 #
 # Captain Cronos House Toolkit
 # Command : housepreview
-# Purpose : Inspect and validate HouseCard preview readiness.
+# Purpose : Prepare validated release handoffs and inspect preview readiness.
 #
 #==============================================================================
 
@@ -53,6 +53,13 @@ case "${1:-}" in
         housepreview_member "$REPO_ROOT" "$2"
         ;;
     *)
-        house_cli_usage_error housepreview_usage
+        house_cli_expect_args "$#" 1 2 housepreview_usage
+        force=0
+        if (( $# == 2 )) && [[ "$2" != "--force" ]]; then
+            house_cli_usage_error housepreview_usage
+        elif (( $# == 2 )); then
+            force=1
+        fi
+        housepreview_create "$REPO_ROOT" "$1" "$force"
         ;;
 esac

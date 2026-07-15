@@ -10,8 +10,8 @@ for repository inspection, validation, member and HouseCard initialization,
 and readiness checks across the build, preview, release, and publish stages.
 
 The current framework deliberately does not render PNG, PDF, or HTML output,
-package releases, or publish artifacts. HouseBuild creates validated metadata
-handoffs; later pipeline stages validate and inspect their workspaces only.
+package releases, or publish artifacts. HouseBuild and HousePreview create
+validated metadata handoffs; later pipeline stages inspect their workspaces.
 
 ## Major Features
 
@@ -22,7 +22,8 @@ handoffs; later pipeline stages validate and inspect their workspaces only.
 - Interactive and non-interactive member initialization with stable UUID metadata
 - Complete, safely recreatable HouseCard workspaces with downstream path metadata
 - Validated per-member HouseBuild handoffs with safe rebuild and cleanup
-- Preview, release, and publish workspace inspection
+- Release-ready HousePreview manifests with safe recreation and cleanup
+- Release and publish workspace inspection
 - Shared CLI parsing, exit-code conventions, and path resolution
 - Dependency-free Bash regression suites for commands and lifecycle workflows
 
@@ -68,8 +69,7 @@ housemember add <member-id>
 housecard create <member-id>
 housecard create <member-id> --force
 housebuild <member-id>
-housebuild member <member-id>
-housepreview member <member-id>
+housepreview <member-id>
 houserelease build
 housepublish validate
 ```
@@ -80,8 +80,8 @@ The workflow is:
 housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
 ```
 
-HouseBuild produces a validated, non-rendered handoff. The final three stages
-report readiness; they do not generate or publish output.
+HouseBuild and HousePreview produce validated, non-rendered handoffs. Release
+and Publish report readiness; they do not package or publish output.
 
 ## Command Summary
 
@@ -95,7 +95,7 @@ report readiness; they do not generate or publish output.
 | `housemember add [member-id]` | Initialize a member interactively or by argument. |
 | `housecard create <member-id> [--force]` | Create or recreate a HouseCard. |
 | `housebuild <member-id> [--force]` | Create a validated, non-rendered build handoff. |
-| `housepreview <command>` | Inspect and validate preview readiness. |
+| `housepreview <member-id> [--force]` | Create a validated release handoff. |
 | `houserelease <command>` | Inspect and validate release readiness. |
 | `housepublish <command>` | Inspect the publish workspace and placeholders. |
 
@@ -113,7 +113,7 @@ output expectations, and exit codes.
 | `docs/` | Architecture, command, standards, and development docs |
 | `tests/` | CLI, lifecycle, validation, and installation regression suites |
 | `build/` | Validated member handoffs and future rendered-output workspaces |
-| `preview/` | ASCII, HTML, and PNG preview workspaces |
+| `preview/` | Release handoffs and future ASCII, HTML, and PNG workspaces |
 | `release/` | PDF, PNG, JPG, and ZIP release workspaces |
 | `publish/` | Publish logs, packages, and manifests workspaces |
 | `ASSET_INDEX.md` | Generated repository file index |
@@ -139,6 +139,7 @@ Run the regression suites and release checks from the repository root:
 bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
+bash tests/test_housepreview.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
