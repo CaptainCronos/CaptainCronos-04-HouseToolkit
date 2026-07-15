@@ -100,9 +100,13 @@ done
 PATH_REPOSITORY="$TEST_WORK_DIR/help"
 mkdir "$PATH_REPOSITORY"
 git -C "$PATH_REPOSITORY" init --quiet
+mkdir "$PATH_REPOSITORY/docs"
+printf '# Fixture\n' > "$PATH_REPOSITORY/README.md"
+printf '# Commands\n' > "$PATH_REPOSITORY/docs/COMMANDS.md"
+git -C "$PATH_REPOSITORY" add README.md docs/COMMANDS.md
 git -C "$PATH_REPOSITORY" -c user.name=HouseToolkit \
     -c user.email=tests@housetoolkit.invalid \
-    commit --quiet --allow-empty --message="Initialize test repository"
+    commit --quiet --message="Initialize test repository"
 
 run_command "$REPO_ROOT/bin/housestats" help
 assert_status 0 "a repository path named help remains valid"
@@ -119,6 +123,16 @@ if [[ -f "$PATH_REPOSITORY/ASSET_INDEX.md" ]]; then
     ((PASS_COUNT += 1))
 else
     printf ' FAIL  houseindex did not create the requested index\n'
+    ((FAIL_COUNT += 1))
+fi
+
+ROOT_SECTION_COUNT="$(grep -c '^### Repository Root$' \
+    "$PATH_REPOSITORY/ASSET_INDEX.md" || true)"
+if [[ "$ROOT_SECTION_COUNT" -eq 1 ]]; then
+    printf ' PASS  houseindex groups repository root files once\n'
+    ((PASS_COUNT += 1))
+else
+    printf ' FAIL  houseindex repeated the repository root group\n'
     ((FAIL_COUNT += 1))
 fi
 

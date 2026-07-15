@@ -2,176 +2,121 @@
 
 ## Purpose
 
-HouseToolkit manages organizations, members, branding, documents, business
-cards, websites, and publishing assets.
+HouseToolkit is a Bash command framework for inspecting and validating Toolkit
+and House repositories, initializing member and HouseCard metadata, and
+checking readiness across a staged asset workflow.
 
-The repository is intended to become the single source of truth for an
-organization's identity.
+The current implementation is metadata- and validation-focused. It does not
+render images or documents, generate HTML, package releases, or publish files.
 
-## Repository
+## Repository Profiles
 
-A House Repository contains:
+HouseToolkit recognizes two repository profiles:
 
-- `branding/`
-- `docs/`
-- `members/`
-- `templates/`
+- A Toolkit repository is marked by `.house-toolkit` and requires `bin/`,
+  `lib/`, `docs/`, `README.md`, `VERSION`, `LICENSE`, `CHANGELOG.md`, and
+  `ROADMAP.md`.
+- A House repository is marked by `.house-repository` and requires `branding/`,
+  `templates/`, `members/`, and `docs/`.
 
-along with the management commands.
+When neither marker exists, `housevalidate` uses legacy directory detection.
+The simultaneous presence of both markers is an error.
 
-## Repository Path Abstraction
+## Command and Library Boundaries
+
+Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
+
+- `paths.sh` resolves repository and workspace paths.
+- `cli.sh` provides help detection, argument-count checks, usage errors, and
+  installed-command startup validation.
+- `house_toolkit.sh` loads version metadata and provides output, Git, and
+  filesystem helpers.
+- `validation.sh` detects repository profiles, dispatches profile validators,
+  records result counts, and maps summaries to exit codes.
+- `validators/` contains the Toolkit and House structural validators.
+- Workflow-specific libraries implement HouseCard, HouseBuild, HousePreview,
+  HouseRelease, and HousePublish behavior.
+
+## Repository Path Resolution
 
 `lib/paths.sh` is the canonical source for repository filesystem locations. It
-locates the repository root from the executing script and the repository marker
-(`.house-toolkit` or `.house-repository`), so command behavior is independent of
-the caller's current working directory.
+resolves command symlinks and walks upward from the real executable path until
+it finds `.house-toolkit` or `.house-repository`.
 
-All commands and supporting libraries must obtain repository paths through
-`lib/paths.sh`. They must not build repository paths from the current working
-directory.
-
-The path abstraction resolves command symlinks before locating the repository.
-This allows the installer to expose commands from `~/.local/bin` while their
-libraries and data remain in the repository. Installer and uninstaller scripts
-also use `lib/paths.sh` to identify the repository whose links they manage.
+Commands therefore operate on the repository containing their executable,
+independently of the caller's current working directory. `houseindex`,
+`housestats`, and `housevalidate` may instead receive an explicit repository
+path.
 
 ## User Installation
 
-`install/install.sh` creates absolute symlinks from `~/.local/bin` to the ten
-executables in `bin/`. No files are copied into system directories, and shell
-configuration is never edited. Existing files or nonmatching symlinks are
-treated as collisions and are preserved.
+`install/install.sh` creates absolute symlinks in `~/.local/bin` for the ten
+executables in `bin/`. It does not copy source files, write system directories,
+or edit shell configuration. Existing regular files and nonmatching symlinks
+are collisions and are preserved.
 
-`install/uninstall.sh` considers a link removable only when its name and exact
-target match the corresponding executable in the current repository. It
-preserves regular files, unrelated symlinks, malformed links, and the
-`~/.local/bin` directory itself. Both scripts provide a read-only `--check`
-mode.
+`install/uninstall.sh` removes a link only when its name and exact target match
+the corresponding executable in the current repository. Both scripts provide
+a read-only `--check` mode and preserve `~/.local/bin` itself.
 
-## Member
+## Member and HouseCard Data
 
-A Member represents one individual.
+`housemember add` interactively creates `members/<member-id>/profile.yml` and
+the member asset directories. Member IDs are normalized to lowercase and may
+contain letters, numbers, periods, underscores, and hyphens. Each profile gets
+a UUID from `uuidgen`.
 
-Each member has:
+`housecard create <member-id>` reads the profile's ID, UUID, and display name,
+then creates `members/<member-id>/card/card.yml` and a short README. Existing
+card directories are never overwritten. The schema stores organization,
+contact, branding, layout, output, and initialization metadata; HouseCard does
+not render that metadata.
 
-- permanent UUID
-- stable member ID
-- display name
-- assets
-- documents
-- metadata
-
-Member IDs may change.
-
-UUIDs never change.
-
-## HouseCard
-
-HouseCard is the business card data model. Each member may have a `card/`
-directory containing `card.yml`, which consumes the member ID, permanent UUID,
-and display name from the member's `profile.yml`.
-
-The versioned `card.yml` schema stores organization, contact, branding, layout,
-output, and initialization metadata. Future rendering engines will consume this
-file to generate SVG, PDF, PNG, HTML, and print assets without changing the card
-schema. HouseCard does not currently render or print assets.
-
-## HouseBuild
-
-HouseBuild is the rendering-engine stage after HouseCard and before
-HousePreview:
+## Workflow Stages
 
 ```text
 housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
 ```
 
-Build artifacts are organized under `build/cards/`, `build/html/`,
-`build/png/`, `build/svg/`, `build/pdf/`, and `build/logs/`. Generated artifacts
-are ignored by Git; only the `.gitkeep` workspace placeholders are versioned.
-Cleanup removes only files recorded in the HouseBuild generated-artifact
-manifest, preserving `.gitkeep` and manually created files.
+### HouseBuild
 
-The initial framework validates repository, member, HouseCard, preview,
-release, and build-workspace readiness. It does not yet render and it never
-previews, publishes, packages, prints, emails, or uploads. HouseBuild obtains
-its repository paths through `lib/paths.sh`, so it is independent of the
-caller's current working directory.
+HouseBuild validates the repository, member profiles, HouseCards, downstream
+workspace directories, and build directories. Its workspace is `build/`, with
+`cards/`, `html/`, `png/`, `svg/`, `pdf/`, and `logs/` subdirectories.
 
-## HousePreview
+`housebuild clean` removes only regular files named in
+`build/.housebuild-generated` after applying path-safety checks. It preserves
+untracked manual files and `.gitkeep` placeholders.
 
-HousePreview is the inspection stage after HouseBuild and before HouseRelease.
-It provides visual and text previews of generated cards under `preview/ascii/`,
-`preview/html/`, and `preview/png/`. The initial framework validates readiness
-and inspects the workspace; it does not render images or HTML.
+### HousePreview
 
-HousePreview does not print, export PDFs, package releases, or publish. Its
-repository paths come from `lib/paths.sh`, so every command works independently
-of the caller's current working directory.
+HousePreview inspects `preview/ascii/`, `preview/html/`, and `preview/png/` and
+validates member and workspace readiness. It does not generate previews.
 
-## HouseRelease
+`housepreview clean` removes only safe, top-level preview paths recorded in
+`preview/.housepreview-generated`; manual files and `.gitkeep` are preserved.
 
-HouseRelease is the packaging stage after HousePreview and before HousePublish:
+### HouseRelease
 
-```text
-housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
-```
+HouseRelease inspects `release/pdf/`, `release/png/`, `release/jpg/`, and
+`release/zip/`, lists matching packages, and validates release workspace
+readiness. It does not create packages.
 
-HouseRelease collects generated assets and prepares release packages. It does
-not render cards. Packages are organized by output format in `release/pdf/`,
-`release/png/`, `release/jpg/`, and `release/zip/`.
+`houserelease clean` removes matching package files from those four
+format-specific directories and preserves `.gitkeep` and non-package files.
 
-Like all Toolkit commands, HouseRelease obtains repository locations through
-`lib/paths.sh`; its behavior is independent of the caller's working directory.
+### HousePublish
 
-## HousePublish
+HousePublish inspects `publish/logs/`, `publish/packages/`, and
+`publish/manifests/`. Its `validate` and `publish` subcommands are explicit,
+deterministic placeholders; no upload or publishing logic is implemented.
 
-HousePublish is the final stage of the Toolkit pipeline. It accepts only an
-already-built release and is responsible only for publishing it:
+`housepublish clean` removes non-`.gitkeep` regular files below the three
+publish workspace directories and does not touch files outside `publish/`.
 
-```text
-housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
-```
+## Generated and User-Authored Files
 
-The publish workspace is organized under `publish/logs/`, `publish/packages/`,
-and `publish/manifests/`. Generated publish artifacts are not source release
-packages; cleanup is confined to regular files in these workspace directories
-and preserves `.gitkeep` placeholders.
-
-The initial framework implements command and workspace structure only.
-Validation and publishing are deterministic placeholders, and no command
-packages or uploads a release. HousePublish obtains its repository location
-through `lib/paths.sh`, so it is independent of the caller's current working
-directory.
-
-## Branding
-
-Branding stores:
-
-- logos
-- colors
-- fonts
-- social assets
-- organization graphics
-
-## Templates
-
-Templates define generated content:
-
-- business cards
-- letterhead
-- web pages
-- email signatures
-- etc.
-
-## Generated vs User Files
-
-Generated files may be recreated.
-
-User-authored files should never be overwritten automatically.
-
-## Future Modules
-
-- `housemember`
-- `housebrand`
-- `housewebsite`
-- `houseupdate`
+Generated workspace artifacts are ignored by Git except for `.gitkeep`
+placeholders. Cleanup behavior is intentionally stage-scoped. User-authored
+files must not be overwritten or removed unless they match the documented
+cleanup rules for that stage.

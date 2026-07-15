@@ -75,6 +75,7 @@ TEMPLATE_COUNT=0
 OTHER_COUNT=0
 
 declare -A DIRECTORY_SET=()
+declare -A TOP_LEVEL_GROUP_SET=()
 for file in "${FILES[@]}"; do
     lower_file="${file,,}"
 
@@ -97,6 +98,7 @@ for file in "${FILES[@]}"; do
     esac
 
     if [[ "$file" == */* ]]; then
+        TOP_LEVEL_GROUP_SET["${file%%/*}"]=1
         directory="${file%/*}"
         while [[ -n "$directory" ]]; do
             DIRECTORY_SET["$directory"]=1
@@ -107,6 +109,13 @@ for file in "${FILES[@]}"; do
 done
 
 DIRECTORY_COUNT="${#DIRECTORY_SET[@]}"
+
+TOP_LEVEL_GROUPS=()
+if (( ${#TOP_LEVEL_GROUP_SET[@]} > 0 )); then
+    mapfile -t TOP_LEVEL_GROUPS < <(
+        printf '%s\n' "${!TOP_LEVEL_GROUP_SET[@]}" | sort
+    )
+fi
 
 {
     printf '# %s Asset Index\n\n' "$REPO_NAME"
@@ -133,21 +142,25 @@ DIRECTORY_COUNT="${#DIRECTORY_SET[@]}"
 
     printf '## Files by Top-Level Directory\n\n'
 
-    current_group=''
+    root_file_count=0
     for file in "${FILES[@]}"; do
-        if [[ "$file" == */* ]]; then
-            group="${file%%/*}"
-        else
-            group='Repository Root'
+        if [[ "$file" != */* ]]; then
+            if (( root_file_count == 0 )); then
+                printf '### Repository Root\n\n'
+            fi
+            printf -- '- `%s`\n' "$file"
+            ((root_file_count += 1))
         fi
+    done
 
-        if [[ "$group" != "$current_group" ]]; then
-            [[ -n "$current_group" ]] && printf '\n'
-            printf '### %s\n\n' "$group"
-            current_group="$group"
-        fi
-
-        printf -- '- `%s`\n' "$file"
+    for group in "${TOP_LEVEL_GROUPS[@]}"; do
+        (( root_file_count == 0 )) || printf '\n'
+        printf '### %s\n\n' "$group"
+        for file in "${FILES[@]}"; do
+            [[ "$file" == "$group"/* ]] || continue
+            printf -- '- `%s`\n' "$file"
+        done
+        root_file_count=1
     done
 
     if [[ ${#FILES[@]} -eq 0 ]]; then
