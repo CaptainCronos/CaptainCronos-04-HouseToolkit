@@ -3,7 +3,7 @@
 #
 # Captain Cronos House Toolkit
 # Command : houserelease
-# Purpose : Prepare HouseToolkit release packages.
+# Purpose : Prepare validated publish handoffs and inspect release readiness.
 #
 #==============================================================================
 
@@ -49,6 +49,13 @@ case "${1:-}" in
         houserelease_build "$REPO_ROOT"
         ;;
     *)
-        house_cli_usage_error houserelease_usage
+        house_cli_expect_args "$#" 1 2 houserelease_usage
+        force=0
+        if (( $# == 2 )) && [[ "$2" != "--force" ]]; then
+            house_cli_usage_error houserelease_usage
+        elif (( $# == 2 )); then
+            force=1
+        fi
+        houserelease_create "$REPO_ROOT" "$1" "$force"
         ;;
 esac

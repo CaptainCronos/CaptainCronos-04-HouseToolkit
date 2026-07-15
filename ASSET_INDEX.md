@@ -7,21 +7,21 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/housepreview-pipeline` |
-| Commit | `6e9c8a2` |
+| Branch | `feature/houserelease-pipeline` |
+| Commit | `d54ec70` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 66 |
+| Repository files | 67 |
 | Directories represented | 26 |
 | Markdown | 9 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 57 |
+| Other files | 58 |
 
 ## Files by Top-Level Directory
 
@@ -117,6 +117,7 @@
 - `tests/test_housebuild.sh`
 - `tests/test_housecard.sh`
 - `tests/test_housepreview.sh`
+- `tests/test_houserelease.sh`
 - `tests/test_install.sh`
 - `tests/test_validation.sh`
 - `tests/test_workflows.sh`

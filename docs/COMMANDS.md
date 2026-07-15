@@ -170,6 +170,8 @@ subcommand renders a preview.
 ### `houserelease`
 
 ```text
+houserelease <member-id>
+houserelease <member-id> --force
 houserelease status
 houserelease list
 houserelease clean
@@ -177,13 +179,22 @@ houserelease build
 houserelease help
 ```
 
+- Direct releases validate the member and consume only
+  `preview/manifests/<member-id>/preview.yml` plus its Preview-owned companion
+  assets. They generate a Preview snapshot, package and release manifests,
+  version metadata, release-note and README placeholders, and checksums below
+  `release/manifests/<member-id>/`.
+- `release.yml` is the sole HousePublish input contract. No package is created.
+- A duplicate release is preserved with status `1`. `--force` refreshes only
+  Toolkit-owned metadata while retaining packages and unrelated release data.
 - `status` reports package counts, manifests, version, and codename.
 - `list` lists matching files in the four format directories.
-- `clean` removes `.pdf`, `.png`, `.jpg`, and `.zip` package files from their
-  matching release directories.
+- `clean` removes only safe files recorded in the generated-release manifest.
 - `build` validates repository structure and release directories.
 
-No subcommand creates or packages a release.
+Direct releases return `0` after creation or recreation, `1` when an existing
+handoff is preserved, and `2` for invalid usage or validation failures.
+HouseRelease creates metadata but does not package or publish a release.
 
 ### `housepublish`
 

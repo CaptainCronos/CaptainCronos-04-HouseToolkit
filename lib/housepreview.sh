@@ -62,7 +62,7 @@ housepreview_manifest_value() {
     ' "$manifest_path"
 }
 
-housepreview_validate_handoff() {
+housepreview_validate_output() {
     local requested_member_id="$1"
     local preview_dir
     local preview_version
@@ -79,8 +79,8 @@ housepreview_validate_handoff() {
     HOUSE_PREVIEW_BUILD_PATH=""
     HOUSE_PREVIEW_README_PATH=""
 
-    if ! housebuild_validate_handoff "$requested_member_id"; then
-        housepreview_reject "$HOUSE_BUILD_ERROR"
+    if ! house_member_validate_profile "$requested_member_id"; then
+        housepreview_reject "$HOUSE_MEMBER_ERROR"
         return
     fi
 
@@ -126,12 +126,6 @@ housepreview_validate_handoff() {
             "HousePreview README for '${HOUSE_MEMBER_ID}' is missing."
         return
     fi
-    if ! cmp -s "$HOUSE_BUILD_MANIFEST_PATH" "$HOUSE_PREVIEW_BUILD_PATH"; then
-        housepreview_reject \
-            "HousePreview build snapshot for '${HOUSE_MEMBER_ID}' is stale."
-        return
-    fi
-
     preview_version="$(awk '$1 == "version:" { print $2; exit }' \
         "$HOUSE_PREVIEW_MANIFEST_PATH")"
     if [[ "$preview_version" != "1" ]]; then
@@ -165,6 +159,24 @@ housepreview_validate_handoff() {
             return
         fi
     done <<< "$specifications"
+}
+
+housepreview_validate_handoff() {
+    local requested_member_id="$1"
+    local build_manifest_path
+
+    if ! housebuild_validate_handoff "$requested_member_id"; then
+        housepreview_reject "$HOUSE_BUILD_ERROR"
+        return
+    fi
+    build_manifest_path="$HOUSE_BUILD_MANIFEST_PATH"
+
+    housepreview_validate_output "$requested_member_id" || return
+    if ! cmp -s "$build_manifest_path" "$HOUSE_PREVIEW_BUILD_PATH"; then
+        housepreview_reject \
+            "HousePreview build snapshot for '${HOUSE_MEMBER_ID}' is stale."
+        return
+    fi
 }
 
 housepreview_write_manifest() {

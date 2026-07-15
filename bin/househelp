@@ -41,7 +41,7 @@ printf '%s\n' \
     ' Inspect and validate House repositories, initialize member and HouseCard' \
     ' metadata, and check each workflow stage for readiness.' \
     '' \
-    ' Rendering, packaging, uploading, and publishing are not implemented.'
+    ' Rendering, package creation, uploading, and publishing are not implemented.'
 
 house_section "Quick Workflow"
 
@@ -60,7 +60,7 @@ house_kv "housemember"   "Manage HouseToolkit members."
 house_kv "housecard"     "Create or explicitly recreate a HouseCard workspace."
 house_kv "housebuild"    "Create build handoffs and inspect readiness."
 house_kv "housepreview"  "Create release handoffs and inspect readiness."
-house_kv "houserelease"  "Inspect and validate release readiness."
+house_kv "houserelease"  "Create publish handoffs and inspect readiness."
 house_kv "housepublish"  "Inspect publish workspace placeholders."
 
 house_section "Documentation"

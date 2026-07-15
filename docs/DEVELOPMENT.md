@@ -19,6 +19,7 @@ bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
+bash tests/test_houserelease.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -40,6 +41,11 @@ files during rebuild and cleanup.
 `tests/test_housepreview.sh` verifies build-manifest consumption, reusable
 handoff validation, release metadata, predictable directories, duplicate and
 force behavior, non-rendering boundaries, cleanup, and user-file preservation.
+
+`tests/test_houserelease.sh` verifies Preview-only consumption, package and
+release metadata, checksums, version and notes placeholders, predictable
+directories, duplicate and force behavior, non-packaging boundaries, cleanup,
+symlink safety, and preservation of user files and packages.
 
 `tests/test_install.sh` uses temporary `HOME` directories. It verifies install,
 check, repair, repeat install, uninstall, collision safety, command execution
@@ -102,6 +108,8 @@ housebuild <member-id>
 housebuild <member-id> --force
 housepreview <member-id>
 housepreview <member-id> --force
+houserelease <member-id>
+houserelease <member-id> --force
 housebuild member <member-id>
 housebuild all
 housebuild build
@@ -112,10 +120,10 @@ housepublish validate
 housepublish publish
 ```
 
-Expected non-rendering behavior is part of the current contract: HouseBuild and
-HousePreview create validated metadata handoffs, HouseRelease validates without
-packaging, and HousePublish validates or reports zero published artifacts
-without uploading.
+Expected non-rendering and non-packaging behavior is part of the current
+contract: HouseBuild and HousePreview create validated metadata handoffs,
+HouseRelease creates checksummed packaging metadata without packages, and
+HousePublish validates or reports zero published artifacts without uploading.
 
 ## Release Checks
 
@@ -127,6 +135,7 @@ bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
+bash tests/test_houserelease.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

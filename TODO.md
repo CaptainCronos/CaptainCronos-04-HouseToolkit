@@ -16,7 +16,7 @@
 ### Future Features
 
 - Evaluate machine-readable validation output for automation.
-- Teach HouseRelease to consume validated HousePreview `preview.yml` handoffs.
+- Teach HousePublish to consume validated HouseRelease `release.yml` handoffs.
 
 ### Technical Debt
 
@@ -28,5 +28,5 @@
 - Opt-in repository policy files for project-specific validation.
 - Shell completion scripts generated from the command inventory.
 - Portable structured-manifest validation without adding a hard dependency.
-- Consume validated HousePreview handoffs when rendering and packaging stages
-  are implemented.
+- Add opt-in rendering and packaging stages without weakening handoff
+  validation or user-file preservation.

@@ -37,6 +37,12 @@
   non-rendering boundary.
 - Expanded preview cleanup, force recreation, symlink safety, and reusable
   handoff validation while preserving legacy readiness commands.
+- Added the complete HouseRelease pipeline, consuming only validated Preview
+  output and producing deterministic package metadata, version metadata,
+  release-note placeholders, checksums, and the HousePublish handoff.
+- Added explicit release recreation, generated-file cleanup, checksum and
+  manifest validation, symlink protection, and preservation of user packages
+  and unrelated release files without implementing packaging or publishing.
 
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 

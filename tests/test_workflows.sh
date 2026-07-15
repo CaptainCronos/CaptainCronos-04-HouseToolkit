@@ -112,6 +112,8 @@ assert_success "housepreview creates a release handoff"
 run_command "$FIXTURE/bin/housepreview" build
 assert_success "housepreview validates its workspace"
 
+run_command "$FIXTURE/bin/houserelease" captain
+assert_success "houserelease creates a publish handoff"
 run_command "$FIXTURE/bin/houserelease" build
 assert_success "houserelease validates its workspace"
 run_command "$FIXTURE/bin/housepublish" validate

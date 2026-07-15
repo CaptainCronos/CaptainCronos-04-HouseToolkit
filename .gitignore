@@ -51,3 +51,8 @@ preview/png/*
 !preview/ascii/.gitkeep
 !preview/html/.gitkeep
 !preview/png/.gitkeep
+
+# HouseRelease generated workspace
+
+release/.houserelease-generated
+release/manifests/*

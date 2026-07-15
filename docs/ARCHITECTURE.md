@@ -178,8 +178,8 @@ preview/
 ```
 
 The copied `build.yml` proves which build was consumed. `preview.yml` defines
-expected preview paths and is the sole input contract for the future release
-pipeline. The reusable handoff validator rejects stale build snapshots,
+expected preview paths and is the sole input contract for HouseRelease. The
+reusable handoff validator rejects stale build snapshots,
 malformed metadata, incomplete directories, and symlink boundaries. No ASCII,
 HTML, or PNG file is rendered.
 
@@ -194,12 +194,40 @@ Manual files and `.gitkeep` are preserved.
 
 ### HouseRelease
 
-HouseRelease inspects `release/pdf/`, `release/png/`, `release/jpg/`, and
-`release/zip/`, lists matching packages, and validates release workspace
-readiness. It does not create packages.
+`houserelease <member-id> [--force]` validates the member and Preview-output
+contract without reading live HouseCard or HouseBuild state. It then creates:
 
-`houserelease clean` removes matching package files from those four
-format-specific directories and preserves `.gitkeep` and non-package files.
+```text
+release/
+├── .houserelease-generated
+├── manifests/<member-id>/
+│   ├── preview.yml
+│   ├── package.yml
+│   ├── release.yml
+│   ├── checksums.sha256
+│   ├── VERSION
+│   ├── RELEASE_NOTES.md
+│   └── README.md
+├── pdf/
+├── png/
+├── jpg/
+└── zip/
+```
+
+The Preview manifest snapshot identifies the sole consumed pipeline input.
+`package.yml` declares future package paths, `release.yml` is the sole
+HousePublish input, and `checksums.sha256` protects every other generated
+metadata file. Package status remains false: no PDF, PNG, JPG, or ZIP is
+created.
+
+Existing release handoffs are preserved with warning status `1`. Explicit
+`--force` refreshes only the seven Toolkit-owned metadata files. Packages,
+release notes stored elsewhere, and unrelated user files remain untouched.
+Legacy `status`, `list`, and `build` readiness commands remain available.
+
+`houserelease clean` removes only safe generated paths recorded in
+`release/.houserelease-generated`. It preserves packages, manual files, and
+`.gitkeep` placeholders.
 
 ### HousePublish
 

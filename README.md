@@ -10,8 +10,9 @@ for repository inspection, validation, member and HouseCard initialization,
 and readiness checks across the build, preview, release, and publish stages.
 
 The current framework deliberately does not render PNG, PDF, or HTML output,
-package releases, or publish artifacts. HouseBuild and HousePreview create
-validated metadata handoffs; later pipeline stages inspect their workspaces.
+create distributable packages, or publish artifacts. HouseBuild, HousePreview,
+and HouseRelease create validated metadata handoffs; HousePublish inspects its
+workspace.
 
 ## Major Features
 
@@ -23,6 +24,7 @@ validated metadata handoffs; later pipeline stages inspect their workspaces.
 - Complete, safely recreatable HouseCard workspaces with downstream path metadata
 - Validated per-member HouseBuild handoffs with safe rebuild and cleanup
 - Release-ready HousePreview manifests with safe recreation and cleanup
+- Checksummed HouseRelease metadata and deterministic HousePublish handoffs
 - Release and publish workspace inspection
 - Shared CLI parsing, exit-code conventions, and path resolution
 - Dependency-free Bash regression suites for commands and lifecycle workflows
@@ -70,7 +72,7 @@ housecard create <member-id>
 housecard create <member-id> --force
 housebuild <member-id>
 housepreview <member-id>
-houserelease build
+houserelease <member-id>
 housepublish validate
 ```
 
@@ -80,8 +82,8 @@ The workflow is:
 housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
 ```
 
-HouseBuild and HousePreview produce validated, non-rendered handoffs. Release
-and Publish report readiness; they do not package or publish output.
+HouseBuild, HousePreview, and HouseRelease produce validated handoffs without
+rendering or packaging. HousePublish reports readiness without publishing.
 
 ## Command Summary
 
@@ -96,7 +98,7 @@ and Publish report readiness; they do not package or publish output.
 | `housecard create <member-id> [--force]` | Create or recreate a HouseCard. |
 | `housebuild <member-id> [--force]` | Create a validated, non-rendered build handoff. |
 | `housepreview <member-id> [--force]` | Create a validated release handoff. |
-| `houserelease <command>` | Inspect and validate release readiness. |
+| `houserelease <member-id> [--force]` | Create a checksummed publish handoff. |
 | `housepublish <command>` | Inspect the publish workspace and placeholders. |
 
 Every command supports `-h` and `--help`. Workflow commands also accept the
@@ -114,7 +116,7 @@ output expectations, and exit codes.
 | `tests/` | CLI, lifecycle, validation, and installation regression suites |
 | `build/` | Validated member handoffs and future rendered-output workspaces |
 | `preview/` | Release handoffs and future ASCII, HTML, and PNG workspaces |
-| `release/` | PDF, PNG, JPG, and ZIP release workspaces |
+| `release/` | Release manifests plus future PDF, PNG, JPG, and ZIP packages |
 | `publish/` | Publish logs, packages, and manifests workspaces |
 | `ASSET_INDEX.md` | Generated repository file index |
 
@@ -140,6 +142,7 @@ bash tests/test_cli.sh
 bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
+bash tests/test_houserelease.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

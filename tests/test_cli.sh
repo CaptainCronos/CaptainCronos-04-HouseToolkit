@@ -79,7 +79,7 @@ test_help housemember "Usage: housemember add [member-id]"
 test_help housecard "Usage: housecard create <member-id> [--force]"
 test_help housebuild "Usage: housebuild <member-id> [--force]"
 test_help housepreview "Usage: housepreview <member-id> [--force]"
-test_help houserelease "Usage: houserelease <command>"
+test_help houserelease "Usage: houserelease <member-id> [--force]"
 test_help housepublish "Usage: housepublish <command>"
 
 test_invalid_arguments househelp unexpected
@@ -96,7 +96,7 @@ test_invalid_arguments housebuild status extra
 test_invalid_arguments housebuild member-id --unknown
 test_invalid_arguments housepreview member
 test_invalid_arguments housepreview member-id --unknown
-test_invalid_arguments houserelease unknown
+test_invalid_arguments houserelease member-id --unknown
 test_invalid_arguments housepublish publish extra
 
 for workflow_command in housebuild housepreview houserelease housepublish; do
