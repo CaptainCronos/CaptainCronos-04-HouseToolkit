@@ -76,11 +76,14 @@ Validation exit codes are:
 
 ```text
 housemember add
+housemember add <member-id>
 ```
 
-Prompts for a member ID, normalizes it to lowercase, obtains a UUID using
-`uuidgen`, and creates `members/<member-id>/profile.yml` plus the member asset
-directories. Existing members are never overwritten. Invalid input exits `2`.
+Initializes a member from an optional member ID argument. When the argument is
+omitted, the command preserves the interactive prompt. It normalizes the ID to
+lowercase, obtains a UUID using `uuidgen`, and creates
+`members/<member-id>/profile.yml` plus the member asset directories. Existing
+members are never overwritten. Invalid input exits `2`.
 
 ### `housecard`
 

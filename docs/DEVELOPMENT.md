@@ -35,8 +35,8 @@ metadata schemas, version drift, documentation targets, symlinks, executable
 modes, JSON manifests, index freshness, and detached Git state.
 
 `tests/test_workflows.sh` creates a disposable Toolkit repository and exercises
-member creation, HouseCard initialization, build, preview, release, and publish
-readiness as one end-to-end lifecycle.
+interactive and non-interactive member creation, HouseCard initialization,
+build, preview, release, and publish readiness as one end-to-end lifecycle.
 
 ## Adding a Command
 
@@ -78,6 +78,7 @@ Use a disposable copy of the repository when testing state-changing commands:
 ```text
 housevalidate
 housemember add
+housemember add <member-id>
 housecard create <member-id>
 housebuild member <member-id>
 housebuild all

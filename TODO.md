@@ -15,7 +15,6 @@
 
 ### Future Features
 
-- Evaluate non-interactive member creation without changing the interactive API.
 - Evaluate machine-readable validation output for automation.
 
 ### Technical Debt

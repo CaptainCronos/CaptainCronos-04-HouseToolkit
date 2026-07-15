@@ -37,6 +37,8 @@ Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
 - `commands.sh` is the single installer command inventory.
 - `house_toolkit.sh` loads version metadata and provides output, Git, and
   filesystem helpers.
+- `housemember.sh` validates member IDs and creates member metadata and assets
+  for both interactive and non-interactive entry points.
 - `validation.sh` detects repository profiles, dispatches profile validators,
   records result counts, and maps summaries to exit codes.
 - `validators/` contains the Toolkit and House structural validators.
@@ -91,10 +93,11 @@ repeatable benchmark and must not obscure command behavior.
 
 ## Member and HouseCard Data
 
-`housemember add` interactively creates `members/<member-id>/profile.yml` and
-the member asset directories. Member IDs are normalized to lowercase and may
-contain letters, numbers, periods, underscores, and hyphens. Each profile gets
-a UUID from `uuidgen`.
+`housemember add [member-id]` creates `members/<member-id>/profile.yml` and the
+member asset directories. Omitting the argument preserves the interactive
+prompt; providing it supports scripts and repeatable provisioning. Member IDs
+are normalized to lowercase and may contain letters, numbers, periods,
+underscores, and hyphens. Each profile gets a UUID from `uuidgen`.
 
 `housecard create <member-id>` reads the profile's ID, UUID, and display name,
 then creates `members/<member-id>/card/card.yml` and a short README. Existing

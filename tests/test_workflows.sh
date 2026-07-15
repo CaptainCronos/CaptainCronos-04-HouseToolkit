@@ -36,6 +36,16 @@ assert_success() {
     fi
 }
 
+assert_failure() {
+    local label="$1"
+    if [[ "$COMMAND_STATUS" -eq 2 ]]; then
+        pass "$label"
+    else
+        fail "$label (expected status 2, got $COMMAND_STATUS)"
+        printf '%s\n' "$COMMAND_OUTPUT"
+    fi
+}
+
 mkdir -p -- "$FIXTURE"
 cp -a -- "$REPO_ROOT/bin" "$REPO_ROOT/lib" "$FIXTURE/"
 mkdir -p -- \
@@ -64,8 +74,27 @@ COMMAND_STATUS=$?
 set -o errexit
 assert_success "housemember initializes a member"
 
+run_command "$FIXTURE/bin/housemember" add Automated.Member
+assert_success "housemember initializes a member non-interactively"
+if [[ "$COMMAND_OUTPUT" != *"Member ID:"* ]] &&
+        grep -q '^  id: automated.member$' \
+            "$FIXTURE/members/automated.member/profile.yml" &&
+        grep -q '^  display_name: Automated.Member$' \
+            "$FIXTURE/members/automated.member/profile.yml"; then
+    pass "non-interactive creation normalizes the ID without prompting"
+else
+    fail "non-interactive creation did not preserve the expected metadata"
+fi
+
+run_command "$FIXTURE/bin/housemember" add Automated.Member
+assert_failure "housemember preserves an existing member"
+run_command "$FIXTURE/bin/housemember" add 'invalid member'
+assert_failure "housemember rejects an invalid non-interactive ID"
+
 run_command "$FIXTURE/bin/housecard" create captain
 assert_success "housecard initializes member metadata"
+run_command "$FIXTURE/bin/housecard" create automated.member
+assert_success "housecard initializes non-interactive member metadata"
 
 run_command "$FIXTURE/bin/housebuild" member captain
 assert_success "housebuild validates one member"

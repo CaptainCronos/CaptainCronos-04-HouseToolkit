@@ -15,6 +15,14 @@
 - Expanded CLI, installer, and validation regression coverage and developer
   documentation for the v1.1 foundation.
 
+### Features
+
+- Added optional non-interactive member creation with
+  `housemember add <member-id>` while preserving the existing interactive
+  workflow and member metadata format.
+- Centralized member ID validation and file creation in a reusable library and
+  expanded workflow regression coverage for both creation modes.
+
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 
 The first HouseToolkit release candidate establishes the complete command-line

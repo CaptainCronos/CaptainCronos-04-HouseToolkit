@@ -7,8 +7,8 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `main` |
-| Commit | `df52fe3` |
+| Branch | `feature/noninteractive-member-creation` |
+| Commit | `6a7010f` |
 | Index format | Deterministic |
 
 ## Summary
@@ -27,11 +27,10 @@
 
 ### Repository Root
 
-- `CHANGELOG.md`
-- `doit`
 - `.editorconfig`
 - `.gitignore`
 - `.house-toolkit`
+- `CHANGELOG.md`
 - `LICENSE`
 - `README.md`
 - `ROADMAP.md`
@@ -78,12 +77,13 @@
 
 - `lib/cli.sh`
 - `lib/commands.sh`
+- `lib/house_toolkit.sh`
 - `lib/housebuild.sh`
 - `lib/housecard.sh`
+- `lib/housemember.sh`
 - `lib/housepreview.sh`
 - `lib/housepublish.sh`
 - `lib/houserelease.sh`
-- `lib/house_toolkit.sh`
 - `lib/paths.sh`
 - `lib/validation.sh`
 - `lib/validators/house.sh`

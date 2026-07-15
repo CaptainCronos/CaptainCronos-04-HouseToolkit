@@ -19,7 +19,7 @@ validate and inspect the existing repository workspaces only.
 - Toolkit, House, and standard repository profile detection
 - Idempotent standard repository initialization
 - Deterministic repository statistics and asset indexing
-- Interactive member initialization with stable UUID metadata
+- Interactive and non-interactive member initialization with stable UUID metadata
 - Versioned HouseCard metadata initialization
 - Build, preview, release, and publish workspace inspection
 - Shared CLI parsing, exit-code conventions, and path resolution
@@ -63,6 +63,7 @@ househelp
 housevalidate
 houseindex
 housemember add
+housemember add <member-id>
 housecard create <member-id>
 housebuild member <member-id>
 housepreview member <member-id>
@@ -87,7 +88,7 @@ The last four stages report readiness; they do not generate or publish output.
 | `housestats [repository-path]` | Display Git and filesystem statistics. |
 | `houseindex [repository-path]` | Generate deterministic `ASSET_INDEX.md`. |
 | `housevalidate [repository-path]` | Validate a Toolkit or House repository. |
-| `housemember add` | Interactively initialize a member. |
+| `housemember add [member-id]` | Initialize a member interactively or by argument. |
 | `housecard create <member-id>` | Initialize HouseCard metadata. |
 | `housebuild <command>` | Inspect and validate build readiness. |
 | `housepreview <command>` | Inspect and validate preview readiness. |

@@ -25,6 +25,8 @@ The final release assessment is recorded in
 - Add safe, repeatable repository initialization and installation repair.
 - Expand repository integrity validation and regression coverage.
 - Standardize developer guidance, lifecycle documentation, and release checks.
+- Enable automation-friendly member initialization without changing the
+  interactive workflow.
 - Improve startup performance only where filesystem or Git work is measurable.
 
 Compatibility with v1.0.0-rc1 commands and workflows remains a release

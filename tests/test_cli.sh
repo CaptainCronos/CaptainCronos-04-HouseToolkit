@@ -75,7 +75,7 @@ test_help houseinit "Usage: houseinit <repository-path>"
 test_help houseindex "Usage: houseindex [repository-path]"
 test_help housestats "Usage: housestats [repository-path]"
 test_help housevalidate "Usage: housevalidate [repository-path]"
-test_help housemember "Usage: housemember add"
+test_help housemember "Usage: housemember add [member-id]"
 test_help housecard "Usage: housecard create <member-id>"
 test_help housebuild "Usage: housebuild <command>"
 test_help housepreview "Usage: housepreview <command>"
@@ -88,6 +88,7 @@ test_invalid_arguments houseindex one two
 test_invalid_arguments housestats one two
 test_invalid_arguments housevalidate one two
 test_invalid_arguments housemember unexpected
+test_invalid_arguments housemember add one two
 test_invalid_arguments housecard create
 test_invalid_arguments housebuild status extra
 test_invalid_arguments housepreview member
