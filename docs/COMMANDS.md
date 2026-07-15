@@ -7,8 +7,9 @@ Every command accepts `-h` and `--help`. Workflow commands also accept the
 usage to standard error and exit `2`.
 
 Commands resolve the repository containing their real executable path, so
-installed symlinks work from any current directory. Only `houseindex`,
-`housestats`, and `housevalidate` accept an explicit repository path.
+installed symlinks work from any current directory. `houseinit` requires an
+explicit repository path. `houseindex`, `housestats`, and `housevalidate`
+accept an optional explicit repository path.
 
 ## Front Page and Repository Commands
 
@@ -20,6 +21,16 @@ househelp
 
 Displays the Toolkit version, codename, purpose, quick workflow, available
 commands, documentation paths, and repository information.
+
+### `houseinit`
+
+```text
+houseinit <repository-path>
+```
+
+Creates a schema-versioned `.house-standard` marker in an existing Git
+repository. Existing Toolkit or House markers are preserved and reported as a
+warning. Repeating initialization is safe and leaves the marker unchanged.
 
 ### `housestats`
 
@@ -47,9 +58,11 @@ It excludes itself and must not be edited manually.
 housevalidate [repository-path]
 ```
 
-Validates a Toolkit or House repository. Marker files take precedence over
-legacy directory detection. Results are reported as `PASS`, `WARN`, `FAIL`, or
-`INFO`.
+Validates a Toolkit, House, or standard repository. Marker files take
+precedence over legacy directory detection; all other Git repositories use the
+standard profile. Shared integrity rules validate metadata, versions,
+documentation targets, executable bits, symlinks, manifests, generated
+indexes, and Git state. Results are `PASS`, `WARN`, `FAIL`, or `INFO`.
 
 Validation exit codes are:
 

@@ -11,16 +11,21 @@ render images or documents, generate HTML, package releases, or publish files.
 
 ## Repository Profiles
 
-HouseToolkit recognizes two repository profiles:
+HouseToolkit recognizes three repository profiles:
 
 - A Toolkit repository is marked by `.house-toolkit` and requires `bin/`,
   `lib/`, `docs/`, `README.md`, `VERSION`, `LICENSE`, `CHANGELOG.md`, and
   `ROADMAP.md`.
 - A House repository is marked by `.house-repository` and requires `branding/`,
   `templates/`, `members/`, and `docs/`.
+- A standard repository may be marked by `.house-standard`. It requires only a
+  README and reports absent common metadata as recommendations, allowing the
+  same profile to fit documentation, shell, media, and future repositories.
 
-When neither marker exists, `housevalidate` uses legacy directory detection.
-The simultaneous presence of both markers is an error.
+When no marker exists, `housevalidate` preserves legacy Toolkit and House
+detection, then treats any other Git repository as standard. Multiple profile
+markers are an error. `houseinit` writes the versioned standard marker without
+modifying any other repository content.
 
 ## Command and Library Boundaries
 
@@ -29,11 +34,14 @@ Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
 - `paths.sh` resolves repository and workspace paths.
 - `cli.sh` provides help detection, argument-count checks, usage errors, and
   installed-command startup validation.
+- `commands.sh` is the single installer command inventory.
 - `house_toolkit.sh` loads version metadata and provides output, Git, and
   filesystem helpers.
 - `validation.sh` detects repository profiles, dispatches profile validators,
   records result counts, and maps summaries to exit codes.
 - `validators/` contains the Toolkit and House structural validators.
+- Common validation checks metadata, versions, local documentation targets,
+  executable modes, symlinks, JSON manifests, index freshness, and Git state.
 - Workflow-specific libraries implement HouseCard, HouseBuild, HousePreview,
   HouseRelease, and HousePublish behavior.
 
@@ -50,7 +58,7 @@ path.
 
 ## User Installation
 
-`install/install.sh` creates absolute symlinks in `~/.local/bin` for the ten
+`install/install.sh` creates absolute symlinks in `~/.local/bin` for the eleven
 executables in `bin/`. It does not copy source files, write system directories,
 or edit shell configuration. Existing regular files and nonmatching symlinks
 are collisions and are preserved.
@@ -58,6 +66,28 @@ are collisions and are preserved.
 `install/uninstall.sh` removes a link only when its name and exact target match
 the corresponding executable in the current repository. Both scripts provide
 a read-only `--check` mode and preserve `~/.local/bin` itself.
+
+`install/install.sh --repair` replaces only broken links whose target has the
+expected `bin/<command>` suffix. Live links owned by another repository remain
+collisions, making concurrent checkouts safe and explicit.
+
+## Command Lifecycle
+
+An entry point resolves its real path, loads path and CLI helpers, parses help
+and argument counts, and then loads only the libraries required by the command.
+Repository commands resolve an explicit target after parsing; workflow commands
+operate on the repository containing their executable. Output flows through
+shared banner, section, key/value, and validation-result helpers. Commands map
+success to `0`, warnings to `1`, and validation or usage failures to `2` where
+documented.
+
+## Performance Boundaries
+
+Repository discovery happens once during normal command startup. Helpers accept
+resolved roots so callers can avoid repeated discovery. `housestats` collects
+directory, file, Markdown, and PNG counts in one `find` traversal; repository
+size remains a separate `du` operation. Further optimization requires a
+repeatable benchmark and must not obscure command behavior.
 
 ## Member and HouseCard Data
 

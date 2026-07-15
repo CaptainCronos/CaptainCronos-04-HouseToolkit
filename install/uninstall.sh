@@ -9,19 +9,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # shellcheck source=../lib/paths.sh
 source "$SCRIPT_DIR/../lib/paths.sh"
-
-COMMANDS=(
-    househelp
-    housevalidate
-    houseindex
-    housestats
-    housemember
-    housecard
-    housebuild
-    housepreview
-    houserelease
-    housepublish
-)
+# shellcheck source=../lib/commands.sh
+source "$SCRIPT_DIR/../lib/commands.sh"
 
 FAIL_COUNT=0
 CHECK_ONLY=0
@@ -75,7 +64,7 @@ BIN_DIR="$HOME/.local/bin"
 report INFO "Repository" "$REPO_ROOT"
 (( CHECK_ONLY == 0 )) || report INFO "Mode" "check only; no changes made"
 
-for command in "${COMMANDS[@]}"; do
+for command in "${HOUSE_COMMANDS[@]}"; do
     destination="$BIN_DIR/$command"
     target="$REPO_ROOT/bin/$command"
 

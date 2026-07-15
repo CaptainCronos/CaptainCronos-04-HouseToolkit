@@ -1,6 +1,6 @@
 # Captain Cronos House Toolkit
 
-Version: 1.0.0-rc1
+Version: 1.1.0-dev
 
 Codename: Cerberus
 
@@ -16,7 +16,8 @@ validate and inspect the existing repository workspaces only.
 ## Major Features
 
 - Per-user installation into `~/.local/bin` without `sudo`
-- Toolkit and House repository profile detection
+- Toolkit, House, and standard repository profile detection
+- Idempotent standard repository initialization
 - Deterministic repository statistics and asset indexing
 - Interactive member initialization with stable UUID metadata
 - Versioned HouseCard metadata initialization
@@ -35,7 +36,7 @@ Install command symlinks for the current user:
 ./install/install.sh
 ```
 
-The installer links all ten commands into `~/.local/bin`; it does not copy the
+The installer links all eleven commands into `~/.local/bin`; it does not copy the
 repository, use system directories, or edit shell configuration. If the user
 command directory is not on `PATH`, the installer prints the optional line to
 add to `~/.bashrc`.
@@ -44,6 +45,7 @@ Validate or remove the installation with:
 
 ```bash
 ./install/install.sh --check
+./install/install.sh --repair
 ./install/uninstall.sh --check
 ./install/uninstall.sh
 ```
@@ -81,6 +83,7 @@ The last four stages report readiness; they do not generate or publish output.
 | Command | Purpose |
 |---|---|
 | `househelp` | Display the HouseToolkit front page. |
+| `houseinit <repository-path>` | Initialize standard repository metadata. |
 | `housestats [repository-path]` | Display Git and filesystem statistics. |
 | `houseindex [repository-path]` | Generate deterministic `ASSET_INDEX.md`. |
 | `housevalidate [repository-path]` | Validate a Toolkit or House repository. |
@@ -130,6 +133,8 @@ Run the regression suites and release checks from the repository root:
 ```bash
 bash tests/test_cli.sh
 bash tests/test_install.sh
+bash tests/test_validation.sh
+bash tests/test_workflows.sh
 bash -n bin/* lib/*.sh lib/validators/*.sh install/*.sh tests/*.sh
 git diff --check
 ```

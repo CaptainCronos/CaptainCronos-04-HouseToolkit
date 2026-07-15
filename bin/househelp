@@ -52,6 +52,7 @@ printf '%s\n' \
 house_section "Available Commands"
 
 house_kv "househelp"     "Display this help screen."
+house_kv "houseinit"     "Initialize a standard repository profile."
 house_kv "housestats"    "Display repository statistics."
 house_kv "houseindex"    "Generate ASSET_INDEX.md for a repository."
 house_kv "housevalidate" "Validate Toolkit or House repository structure."

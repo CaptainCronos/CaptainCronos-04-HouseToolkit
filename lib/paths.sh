@@ -35,7 +35,9 @@ house_find_repo_root() {
     }
 
     while true; do
-        if [[ -e "$candidate/.house-toolkit" || -e "$candidate/.house-repository" ]]; then
+        if [[ -e "$candidate/.house-toolkit" ||
+                -e "$candidate/.house-repository" ||
+                -e "$candidate/.house-standard" ]]; then
             printf '%s\n' "$candidate"
             return 0
         fi

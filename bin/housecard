@@ -28,7 +28,11 @@ source "${SCRIPT_DIR}/../lib/validation.sh"
 source "${SCRIPT_DIR}/../lib/housecard.sh"
 
 housecard_usage() {
-    printf 'Usage: housecard create <member-id>\n'
+    cat <<'EOF'
+Usage: housecard create <member-id>
+
+Initialize HouseCard metadata for an existing member without overwriting data.
+EOF
 }
 
 validation_exit() {

@@ -22,7 +22,11 @@ source "${SCRIPT_DIR}/../lib/cli.sh"
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 
 houseindex_usage() {
-    printf 'Usage: houseindex [repository-path]\n'
+    cat <<'EOF'
+Usage: houseindex [repository-path]
+
+Generate a deterministic ASSET_INDEX.md. Defaults to this Toolkit repository.
+EOF
 }
 
 if house_cli_is_help_option "${1:-}"; then

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Initialize a standard Captain Cronos repository for HouseToolkit validation.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+
+# shellcheck source=../lib/paths.sh
+source "${SCRIPT_DIR}/../lib/paths.sh"
+# shellcheck source=../lib/cli.sh
+source "${SCRIPT_DIR}/../lib/cli.sh"
+# shellcheck source=../lib/house_toolkit.sh
+source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+usage() {
+    cat <<'EOF'
+Usage: houseinit <repository-path>
+
+Initialize a Git repository with standard HouseToolkit metadata.
+Existing repository files and profile markers are never overwritten.
+EOF
+}
+
+if house_cli_is_help "${1:-}"; then
+    house_cli_expect_args "$#" 1 1 usage
+    usage
+    exit 0
+fi
+house_cli_expect_args "$#" 1 1 usage
+
+TARGET="$1"
+if ! house_is_git_repo "$TARGET"; then
+    house_error "Not a Git repository: $TARGET"
+    exit 1
+fi
+REPO_ROOT="$(house_repo_root "$TARGET")"
+REPO_NAME="$(basename -- "$REPO_ROOT")"
+
+house_banner
+house_section "Repository Initialization"
+house_kv "Repository" "$REPO_NAME"
+house_kv "Path" "$REPO_ROOT"
+
+if [[ -e "$REPO_ROOT/.house-toolkit" || -e "$REPO_ROOT/.house-repository" ]]; then
+    house_warning " WARN  Repository profile                  existing profile marker preserved"
+    exit 1
+fi
+
+if [[ -e "$REPO_ROOT/.house-standard" ]]; then
+    house_success " PASS  Repository profile                  already initialized"
+    exit 0
+fi
+
+printf '%s\n' \
+    'schema: 1' \
+    'profile: standard' \
+    "repository: $REPO_NAME" > "$REPO_ROOT/.house-standard"
+house_success " PASS  Repository profile                  created .house-standard"

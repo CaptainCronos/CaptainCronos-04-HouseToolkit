@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0-dev "Cerberus" — Development
+
+### Foundation
+
+- Added a lightweight standard repository profile and idempotent `houseinit`
+  command while preserving Toolkit and House profile behavior.
+- Expanded validation for repository metadata, version consistency, local
+  documentation links, executable permissions, broken symlinks, JSON
+  manifests, stale asset indexes, and Git anomalies.
+- Added explicit repair mode for broken command symlinks and centralized the
+  installer command inventory.
+- Reduced `housestats` filesystem counting from four traversals to one.
+- Expanded CLI, installer, and validation regression coverage and developer
+  documentation for the v1.1 foundation.
+
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 
 The first HouseToolkit release candidate establishes the complete command-line

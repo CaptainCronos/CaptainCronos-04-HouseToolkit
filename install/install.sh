@@ -9,31 +9,22 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # shellcheck source=../lib/paths.sh
 source "$SCRIPT_DIR/../lib/paths.sh"
-
-COMMANDS=(
-    househelp
-    housevalidate
-    houseindex
-    housestats
-    housemember
-    housecard
-    housebuild
-    housepreview
-    houserelease
-    housepublish
-)
+# shellcheck source=../lib/commands.sh
+source "$SCRIPT_DIR/../lib/commands.sh"
 
 FAIL_COUNT=0
 CHECK_ONLY=0
+REPAIR=0
 
 usage() {
     cat <<'EOF'
-Usage: install/install.sh [--check]
+Usage: install/install.sh [--check | --repair]
 
 Install HouseToolkit command symlinks in ~/.local/bin.
 
 Options:
   --check  Validate the installation without making changes.
+  --repair Repair broken HouseToolkit command symlinks from an older location.
   -h, --help
            Display this help.
 EOF
@@ -55,6 +46,7 @@ parse_arguments() {
     case "${1:-}" in
         "") ;;
         --check) CHECK_ONLY=1 ;;
+        --repair) REPAIR=1 ;;
         -h|--help)
             usage
             exit 0
@@ -88,7 +80,7 @@ validate_sources() {
     local command
     local target
 
-    for command in "${COMMANDS[@]}"; do
+    for command in "${HOUSE_COMMANDS[@]}"; do
         target="$REPO_ROOT/bin/$command"
         if [[ -f "$target" && -x "$target" ]]; then
             report PASS "Source: $command" "executable"
@@ -101,16 +93,21 @@ validate_sources() {
 preflight_destinations() {
     local command
     local destination
+    local existing_target
     local target
 
     [[ -d "$BIN_DIR" ]] || return 0
 
-    for command in "${COMMANDS[@]}"; do
+    for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
         target="$REPO_ROOT/bin/$command"
 
         if [[ -L "$destination" ]]; then
-            if [[ "$(readlink -- "$destination")" != "$target" ]]; then
+            existing_target="$(readlink -- "$destination")"
+            if [[ "$existing_target" != "$target" ]] && ! {
+                    (( REPAIR == 1 )) && [[ ! -e "$destination" ]] &&
+                    [[ "$existing_target" == */bin/"$command" ]];
+                }; then
                 report FAIL "Collision: $command" "existing symlink left untouched"
             fi
         elif [[ -e "$destination" ]]; then
@@ -131,12 +128,17 @@ install_links() {
         report INFO "User command directory" "$BIN_DIR"
     fi
 
-    for command in "${COMMANDS[@]}"; do
+    for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
         target="$REPO_ROOT/bin/$command"
 
         if [[ -L "$destination" ]]; then
-            report INFO "Link: $command" "already installed"
+            if [[ "$(readlink -- "$destination")" == "$target" ]]; then
+                report INFO "Link: $command" "already installed"
+            else
+                ln -sfn -- "$target" "$destination"
+                report PASS "Link: $command" "repaired"
+            fi
         else
             ln -s -- "$target" "$destination"
             report PASS "Link: $command" "created"
@@ -149,7 +151,7 @@ verify_links() {
     local destination
     local target
 
-    for command in "${COMMANDS[@]}"; do
+    for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
         target="$REPO_ROOT/bin/$command"
 

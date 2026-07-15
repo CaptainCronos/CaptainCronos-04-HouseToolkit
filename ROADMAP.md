@@ -18,3 +18,19 @@ packaging, or publishing logic.
 
 The final release assessment is recorded in
 [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md).
+
+## v1.1.0 — Standard Repository Foundation
+
+- Support Toolkit, House, and generic Captain Cronos repositories.
+- Add safe, repeatable repository initialization and installation repair.
+- Expand repository integrity validation and regression coverage.
+- Standardize developer guidance, lifecycle documentation, and release checks.
+- Improve startup performance only where filesystem or Git work is measurable.
+
+Compatibility with v1.0.0-rc1 commands and workflows remains a release
+requirement. Rendering, packaging, and publishing remain outside this milestone.
+
+## Future
+
+Potential v1.2 work is tracked separately in [`TODO.md`](TODO.md) and will be
+selected only after the v1.1 foundation is exercised across the repository set.

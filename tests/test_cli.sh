@@ -65,10 +65,13 @@ test_invalid_arguments() {
 
     run_command "$REPO_ROOT/bin/$command" "$@"
     assert_status 2 "$command rejects invalid arguments"
+    assert_output_contains "Error: invalid command or arguments." \
+        "$command explains invalid usage"
     assert_output_contains "Usage: $command" "$command reports usage"
 }
 
 test_help househelp "Available Commands"
+test_help houseinit "Usage: houseinit <repository-path>"
 test_help houseindex "Usage: houseindex [repository-path]"
 test_help housestats "Usage: housestats [repository-path]"
 test_help housevalidate "Usage: housevalidate [repository-path]"
@@ -80,6 +83,7 @@ test_help houserelease "Usage: houserelease <command>"
 test_help housepublish "Usage: housepublish <command>"
 
 test_invalid_arguments househelp unexpected
+test_invalid_arguments houseinit
 test_invalid_arguments houseindex one two
 test_invalid_arguments housestats one two
 test_invalid_arguments housevalidate one two
@@ -125,6 +129,11 @@ else
     printf ' FAIL  houseindex did not create the requested index\n'
     ((FAIL_COUNT += 1))
 fi
+
+run_command "$REPO_ROOT/bin/housestats" "$PATH_REPOSITORY"
+assert_status 0 "housestats collects repository statistics"
+assert_output_contains "Markdown Files" \
+    "housestats reports counts from the consolidated scan"
 
 ROOT_SECTION_COUNT="$(grep -c '^### Repository Root$' \
     "$PATH_REPOSITORY/ASSET_INDEX.md" || true)"

@@ -13,6 +13,7 @@ trap 'rm -rf -- "$TEST_WORK_DIR"' EXIT
 
 COMMANDS=(
     househelp
+    houseinit
     housevalidate
     houseindex
     housestats
@@ -114,6 +115,21 @@ done
 
 run_command "$INSTALL_HOME" "$REPO_ROOT/install/install.sh"
 assert_status 0 "repeat installation succeeds"
+
+REPAIR_HOME="$(new_home repair-home)"
+mkdir -p -- "$REPAIR_HOME/.local/bin"
+for command in "${COMMANDS[@]}"; do
+    ln -s -- "/missing/old-toolkit/bin/$command" \
+        "$REPAIR_HOME/.local/bin/$command"
+done
+run_command "$REPAIR_HOME" "$REPO_ROOT/install/install.sh" --repair
+assert_status 0 "repair replaces broken HouseToolkit links"
+if [[ "$(readlink -- "$REPAIR_HOME/.local/bin/househelp")" == \
+        "$REPO_ROOT/bin/househelp" ]]; then
+    pass "repair points commands at the current repository"
+else
+    fail "repair did not replace a broken command link"
+fi
 
 run_command "$INSTALL_HOME" "$REPO_ROOT/install/install.sh" --check
 assert_status 0 "installer --check validates an installed home"
