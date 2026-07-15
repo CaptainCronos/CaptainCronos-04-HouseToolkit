@@ -27,3 +27,5 @@
 - Opt-in repository policy files for project-specific validation.
 - Shell completion scripts generated from the command inventory.
 - Portable structured-manifest validation without adding a hard dependency.
+- Consume HouseCard workflow paths when rendering and packaging stages are
+  implemented.

@@ -89,14 +89,22 @@ members are never overwritten. Invalid input exits `2`.
 
 ```text
 housecard create <member-id>
+housecard create <member-id> --force
 ```
 
-Validates the repository and member profile, then initializes
-`members/<member-id>/card/card.yml` and `README.md`. Existing card directories
-are preserved and reported as a warning. The command does not render a card.
+Normalizes the member ID, validates the repository and versioned member profile,
+then creates `members/<member-id>/card/` with `card.yml`, a README, and
+`assets/` and `templates/` placeholders. Metadata includes deterministic paths
+for later build, preview, release, and publish outputs.
 
-HouseCard result codes follow validation status: `0` for pass, `1` for a
-warning such as an existing card, and `2` for failure.
+Existing card workspaces are preserved and reported as a warning. Supplying
+`--force` before or after the member ID regenerates only Toolkit-owned metadata
+and placeholder files; unrelated files and member assets are retained. The
+command does not render a card.
+
+HouseCard result codes are `0` for successful creation or recreation, `1` when
+an existing card is preserved, and `2` for invalid usage, member data, or
+repository state.
 
 ## Workflow Commands
 

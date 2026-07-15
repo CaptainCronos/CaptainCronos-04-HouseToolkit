@@ -22,6 +22,11 @@
   workflow and member metadata format.
 - Centralized member ID validation and file creation in a reusable library and
   expanded workflow regression coverage for both creation modes.
+- Completed HouseCard workspace creation with shared member-profile validation,
+  normalized IDs, source placeholders, and deterministic paths for build,
+  preview, release, and publish stages.
+- Added explicit `--force` recreation for Toolkit-owned HouseCard files while
+  preserving unrelated member assets and the existing non-overwrite default.
 
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 

@@ -16,6 +16,7 @@ The test suite is dependency-free beyond the tools used by the Toolkit:
 
 ```bash
 bash tests/test_cli.sh
+bash tests/test_housecard.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -23,6 +24,11 @@ bash tests/test_workflows.sh
 
 `tests/test_cli.sh` verifies help, invalid-argument exit codes, explicit
 repository paths, and workflow command execution from an unrelated directory.
+
+`tests/test_housecard.sh` creates a disposable Toolkit repository and verifies
+normalized creation, complete workspace metadata, duplicate protection,
+failure exit codes, explicit recreation, preservation of unrelated assets, and
+downstream HouseBuild readiness.
 
 `tests/test_install.sh` uses temporary `HOME` directories. It verifies install,
 check, repair, repeat install, uninstall, collision safety, command execution
@@ -80,6 +86,7 @@ housevalidate
 housemember add
 housemember add <member-id>
 housecard create <member-id>
+housecard create <member-id> --force
 housebuild member <member-id>
 housebuild all
 housebuild build
@@ -102,6 +109,7 @@ Before committing, run:
 ```bash
 bash -n bin/* lib/*.sh lib/validators/*.sh install/*.sh tests/*.sh
 bash tests/test_cli.sh
+bash tests/test_housecard.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

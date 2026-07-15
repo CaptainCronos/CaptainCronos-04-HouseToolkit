@@ -37,8 +37,8 @@ Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
 - `commands.sh` is the single installer command inventory.
 - `house_toolkit.sh` loads version metadata and provides output, Git, and
   filesystem helpers.
-- `housemember.sh` validates member IDs and creates member metadata and assets
-  for both interactive and non-interactive entry points.
+- `housemember.sh` normalizes member IDs, validates member profiles, and creates
+  member metadata and assets for interactive and non-interactive entry points.
 - `validation.sh` detects repository profiles, dispatches profile validators,
   records result counts, and maps summaries to exit codes.
 - `validators/` contains the Toolkit and House structural validators.
@@ -99,11 +99,24 @@ prompt; providing it supports scripts and repeatable provisioning. Member IDs
 are normalized to lowercase and may contain letters, numbers, periods,
 underscores, and hyphens. Each profile gets a UUID from `uuidgen`.
 
-`housecard create <member-id>` reads the profile's ID, UUID, and display name,
-then creates `members/<member-id>/card/card.yml` and a short README. Existing
-card directories are never overwritten. The schema stores organization,
-contact, branding, layout, output, and initialization metadata; HouseCard does
-not render that metadata.
+`housecard create <member-id> [--force]` uses shared member validation to read
+the profile's normalized ID, UUID, and display name. It creates this source
+workspace:
+
+```text
+members/<member-id>/card/
+├── card.yml
+├── README.md
+├── assets/.gitkeep
+└── templates/.gitkeep
+```
+
+The schema preserves the existing organization, contact, branding, layout, and
+output keys while adding deterministic paths for build, preview, release, and
+publish outputs. Existing workspaces are preserved with warning status `1`.
+Explicit `--force` regenerates the Toolkit-owned `card.yml` and README while
+retaining unrelated files and member assets. HouseCard does not render the
+metadata.
 
 ## Workflow Stages
 

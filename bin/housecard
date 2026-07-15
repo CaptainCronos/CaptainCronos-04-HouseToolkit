@@ -24,14 +24,17 @@ REPO_ROOT="$(house_cli_repo_root)"
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 # shellcheck source=../lib/validation.sh
 source "${SCRIPT_DIR}/../lib/validation.sh"
+# shellcheck source=../lib/housemember.sh
+source "${SCRIPT_DIR}/../lib/housemember.sh"
 # shellcheck source=../lib/housecard.sh
 source "${SCRIPT_DIR}/../lib/housecard.sh"
 
 housecard_usage() {
     cat <<'EOF'
-Usage: housecard create <member-id>
+Usage: housecard create <member-id> [--force]
 
-Initialize HouseCard metadata for an existing member without overwriting data.
+Create a complete HouseCard workspace for an existing member. Existing cards
+are preserved unless --force is supplied.
 EOF
 }
 
@@ -54,9 +57,28 @@ fi
 if [[ "${1:-}" != "create" ]]; then
     house_cli_usage_error housecard_usage
 fi
-house_cli_expect_args "$#" 2 2 housecard_usage
+house_cli_expect_args "$#" 2 3 housecard_usage
 
-requested_member_id="$2"
+force=0
+case "$#:$2:${3:-}" in
+    2:--force:*)
+        house_cli_usage_error housecard_usage
+        ;;
+    2:*)
+        requested_member_id="$2"
+        ;;
+    3:--force:*)
+        requested_member_id="$3"
+        force=1
+        ;;
+    3:*:--force)
+        requested_member_id="$2"
+        force=1
+        ;;
+    *)
+        house_cli_usage_error housecard_usage
+        ;;
+esac
 
 house_banner
 house_section "HouseCard Create"
@@ -89,61 +111,24 @@ if (( HOUSE_FAIL_COUNT > 0 )); then
     validation_exit
 fi
 
-if [[ ! "$requested_member_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
-    house_validation_result FAIL "Member ID" "invalid member identifier"
-    validation_exit
+if housecard_create "$requested_member_id" "$force"; then
+    house_validation_result PASS "Member '${HOUSE_MEMBER_ID}'" \
+        "$HOUSE_MEMBER_DIR"
+    house_validation_result PASS "Member profile.yml" \
+        "version 1; id, uuid, display_name"
+    house_validation_result PASS "HouseCard workspace" \
+        "$HOUSE_CARD_DIR"
+    house_validation_result PASS "card/card.yml" "$HOUSE_CARD_RESULT"
+    house_validation_result PASS "card/README.md" "$HOUSE_CARD_RESULT"
+    house_validation_result PASS "card/assets/" "placeholder ready"
+    house_validation_result PASS "card/templates/" "placeholder ready"
+else
+    result=$?
+    if (( result == 1 )); then
+        house_validation_result WARN "HouseCard '${HOUSE_MEMBER_ID}'" \
+            "$HOUSE_CARD_ERROR"
+    else
+        house_validation_result FAIL "HouseCard" "$HOUSE_CARD_ERROR"
+    fi
 fi
-
-member_id="${requested_member_id,,}"
-member_dir="$(house_member_dir "$member_id")"
-profile_path="${member_dir}/profile.yml"
-card_dir="$(house_member_card_dir "$member_id")"
-card_path="${card_dir}/card.yml"
-readme_path="${card_dir}/README.md"
-
-if [[ ! -d "$member_dir" ]]; then
-    house_validation_result FAIL "Member '${member_id}'" "member does not exist"
-    validation_exit
-fi
-house_validation_result PASS "Member '${member_id}'" "$member_dir"
-
-if [[ ! -f "$profile_path" ]]; then
-    house_validation_result FAIL "Member profile.yml" "missing required file"
-    validation_exit
-fi
-house_validation_result PASS "Member profile.yml" "$profile_path"
-
-profile_member_id="$(housecard_profile_member_value "$profile_path" id)"
-member_uuid="$(housecard_profile_member_value "$profile_path" uuid)"
-display_name="$(housecard_profile_member_value "$profile_path" display_name)"
-
-if [[ -z "$profile_member_id" || -z "$member_uuid" || -z "$display_name" ]]; then
-    house_validation_result FAIL "Member metadata" \
-        "member.id, member.uuid, and member.display_name are required"
-    validation_exit
-fi
-
-if [[ "$profile_member_id" != "$member_id" ]]; then
-    house_validation_result FAIL "Member metadata" \
-        "profile member ID '${profile_member_id}' does not match '${member_id}'"
-    validation_exit
-fi
-house_validation_result PASS "Member metadata" "id, uuid, display_name"
-
-if [[ -d "$card_dir" ]]; then
-    house_validation_result WARN "HouseCard '${member_id}'" \
-        "already initialized; existing files were not changed"
-    validation_exit
-elif [[ -e "$card_dir" ]]; then
-    house_validation_result FAIL "HouseCard '${member_id}'" \
-        "card path exists and is not a directory"
-    validation_exit
-fi
-
-mkdir "$card_dir"
-housecard_write_card "$card_path" "$profile_member_id" "$member_uuid" "$display_name"
-housecard_write_readme "$readme_path"
-
-house_validation_result PASS "card/card.yml" "created"
-house_validation_result PASS "card/README.md" "created"
 validation_exit

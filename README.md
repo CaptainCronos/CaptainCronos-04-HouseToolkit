@@ -20,7 +20,7 @@ validate and inspect the existing repository workspaces only.
 - Idempotent standard repository initialization
 - Deterministic repository statistics and asset indexing
 - Interactive and non-interactive member initialization with stable UUID metadata
-- Versioned HouseCard metadata initialization
+- Complete, safely recreatable HouseCard workspaces with downstream path metadata
 - Build, preview, release, and publish workspace inspection
 - Shared CLI parsing, exit-code conventions, and path resolution
 - Dependency-free Bash regression tests for the CLI and installer
@@ -65,6 +65,7 @@ houseindex
 housemember add
 housemember add <member-id>
 housecard create <member-id>
+housecard create <member-id> --force
 housebuild member <member-id>
 housepreview member <member-id>
 houserelease build
@@ -89,7 +90,7 @@ The last four stages report readiness; they do not generate or publish output.
 | `houseindex [repository-path]` | Generate deterministic `ASSET_INDEX.md`. |
 | `housevalidate [repository-path]` | Validate a Toolkit or House repository. |
 | `housemember add [member-id]` | Initialize a member interactively or by argument. |
-| `housecard create <member-id>` | Initialize HouseCard metadata. |
+| `housecard create <member-id> [--force]` | Create or recreate a HouseCard. |
 | `housebuild <command>` | Inspect and validate build readiness. |
 | `housepreview <command>` | Inspect and validate preview readiness. |
 | `houserelease <command>` | Inspect and validate release readiness. |
@@ -133,6 +134,7 @@ Run the regression suites and release checks from the repository root:
 
 ```bash
 bash tests/test_cli.sh
+bash tests/test_housecard.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
