@@ -9,9 +9,17 @@ HOUSE_PATHS_LOADED=1
 house_get_script_dir() {
     local script_index
     local script_path
+    local script_dir
 
     script_index=$((${#BASH_SOURCE[@]} - 1))
     script_path="${BASH_SOURCE[$script_index]}"
+
+    while [[ -L "$script_path" ]]; do
+        script_dir="$(cd -- "$(dirname -- "$script_path")" >/dev/null 2>&1 && pwd -P)" || return 1
+        script_path="$(readlink -- "$script_path")" || return 1
+        [[ "$script_path" == /* ]] || script_path="$script_dir/$script_path"
+    done
+
     (
         cd -- "$(dirname -- "$script_path")" >/dev/null 2>&1
         pwd -P
@@ -27,7 +35,9 @@ house_find_repo_root() {
     }
 
     while true; do
-        if [[ -e "$candidate/.house-toolkit" || -e "$candidate/.house-repository" ]]; then
+        if [[ -e "$candidate/.house-toolkit" ||
+                -e "$candidate/.house-repository" ||
+                -e "$candidate/.house-standard" ]]; then
             printf '%s\n' "$candidate"
             return 0
         fi

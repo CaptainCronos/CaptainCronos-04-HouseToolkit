@@ -11,7 +11,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
@@ -19,7 +19,11 @@ source "${SCRIPT_DIR}/../lib/paths.sh"
 source "${SCRIPT_DIR}/../lib/cli.sh"
 
 housemember_usage() {
-    printf 'Usage: housemember add\n'
+    cat <<'EOF'
+Usage: housemember add
+
+Interactively initialize a member profile and asset directories.
+EOF
 }
 
 fail() {

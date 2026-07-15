@@ -65,10 +65,13 @@ test_invalid_arguments() {
 
     run_command "$REPO_ROOT/bin/$command" "$@"
     assert_status 2 "$command rejects invalid arguments"
+    assert_output_contains "Error: invalid command or arguments." \
+        "$command explains invalid usage"
     assert_output_contains "Usage: $command" "$command reports usage"
 }
 
 test_help househelp "Available Commands"
+test_help houseinit "Usage: houseinit <repository-path>"
 test_help houseindex "Usage: houseindex [repository-path]"
 test_help housestats "Usage: housestats [repository-path]"
 test_help housevalidate "Usage: housevalidate [repository-path]"
@@ -80,6 +83,7 @@ test_help houserelease "Usage: houserelease <command>"
 test_help housepublish "Usage: housepublish <command>"
 
 test_invalid_arguments househelp unexpected
+test_invalid_arguments houseinit
 test_invalid_arguments houseindex one two
 test_invalid_arguments housestats one two
 test_invalid_arguments housevalidate one two
@@ -100,9 +104,13 @@ done
 PATH_REPOSITORY="$TEST_WORK_DIR/help"
 mkdir "$PATH_REPOSITORY"
 git -C "$PATH_REPOSITORY" init --quiet
+mkdir "$PATH_REPOSITORY/docs"
+printf '# Fixture\n' > "$PATH_REPOSITORY/README.md"
+printf '# Commands\n' > "$PATH_REPOSITORY/docs/COMMANDS.md"
+git -C "$PATH_REPOSITORY" add README.md docs/COMMANDS.md
 git -C "$PATH_REPOSITORY" -c user.name=HouseToolkit \
     -c user.email=tests@housetoolkit.invalid \
-    commit --quiet --allow-empty --message="Initialize test repository"
+    commit --quiet --message="Initialize test repository"
 
 run_command "$REPO_ROOT/bin/housestats" help
 assert_status 0 "a repository path named help remains valid"
@@ -119,6 +127,21 @@ if [[ -f "$PATH_REPOSITORY/ASSET_INDEX.md" ]]; then
     ((PASS_COUNT += 1))
 else
     printf ' FAIL  houseindex did not create the requested index\n'
+    ((FAIL_COUNT += 1))
+fi
+
+run_command "$REPO_ROOT/bin/housestats" "$PATH_REPOSITORY"
+assert_status 0 "housestats collects repository statistics"
+assert_output_contains "Markdown Files" \
+    "housestats reports counts from the consolidated scan"
+
+ROOT_SECTION_COUNT="$(grep -c '^### Repository Root$' \
+    "$PATH_REPOSITORY/ASSET_INDEX.md" || true)"
+if [[ "$ROOT_SECTION_COUNT" -eq 1 ]]; then
+    printf ' PASS  houseindex groups repository root files once\n'
+    ((PASS_COUNT += 1))
+else
+    printf ' FAIL  houseindex repeated the repository root group\n'
     ((FAIL_COUNT += 1))
 fi
 

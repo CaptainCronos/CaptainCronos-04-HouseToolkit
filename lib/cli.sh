@@ -20,6 +20,7 @@ house_cli_is_help() {
 house_cli_usage_error() {
     local usage_function="$1"
 
+    printf 'Error: invalid command or arguments.\n\n' >&2
     "$usage_function" >&2
     return 2
 }

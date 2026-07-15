@@ -7,21 +7,21 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/standardize-cli-parsing` |
-| Commit | `c8c5d26` |
+| Branch | `feature/v1.1-foundation` |
+| Commit | `71d4031` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 53 |
+| Repository files | 61 |
 | Directories represented | 26 |
-| Markdown | 8 |
+| Markdown | 9 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 45 |
+| Other files | 52 |
 
 ## Files by Top-Level Directory
 
@@ -43,6 +43,7 @@
 - `bin/housecard`
 - `bin/househelp`
 - `bin/houseindex`
+- `bin/houseinit`
 - `bin/housemember`
 - `bin/housepreview`
 - `bin/housepublish`
@@ -64,15 +65,18 @@
 - `docs/ARCHITECTURE.md`
 - `docs/COMMANDS.md`
 - `docs/DEVELOPMENT.md`
+- `docs/RELEASE_READINESS.md`
 - `docs/STANDARDS.md`
 
 ### install
 
 - `install/install.sh`
+- `install/uninstall.sh`
 
 ### lib
 
 - `lib/cli.sh`
+- `lib/commands.sh`
 - `lib/house_toolkit.sh`
 - `lib/housebuild.sh`
 - `lib/housecard.sh`
@@ -82,6 +86,7 @@
 - `lib/paths.sh`
 - `lib/validation.sh`
 - `lib/validators/house.sh`
+- `lib/validators/standard.sh`
 - `lib/validators/toolkit.sh`
 
 ### preview
@@ -107,3 +112,6 @@
 ### tests
 
 - `tests/test_cli.sh`
+- `tests/test_install.sh`
+- `tests/test_validation.sh`
+- `tests/test_workflows.sh`

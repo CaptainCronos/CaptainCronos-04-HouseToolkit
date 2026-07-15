@@ -12,7 +12,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
@@ -22,7 +22,11 @@ source "${SCRIPT_DIR}/../lib/cli.sh"
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 
 housestats_usage() {
-    printf 'Usage: housestats [repository-path]\n'
+    cat <<'EOF'
+Usage: housestats [repository-path]
+
+Display Git and filesystem statistics. Defaults to this Toolkit repository.
+EOF
 }
 
 if house_cli_is_help_option "${1:-}"; then
@@ -64,11 +68,12 @@ house_kv "Branch" "$BRANCH"
 house_kv "Status" "$STATUS"
 house_kv "Commit" "$COMMIT"
 
+house_collect_stats "$REPO_ROOT"
 house_section "Statistics"
-house_kv "Directories" "$(house_directory_count "$REPO_ROOT")"
-house_kv "Files" "$(house_file_count "$REPO_ROOT")"
-house_kv "Markdown Files" "$(house_markdown_count "$REPO_ROOT")"
-house_kv "PNG Files" "$(house_png_count "$REPO_ROOT")"
+house_kv "Directories" "$HOUSE_STAT_DIRECTORIES"
+house_kv "Files" "$HOUSE_STAT_FILES"
+house_kv "Markdown Files" "$HOUSE_STAT_MARKDOWN"
+house_kv "PNG Files" "$HOUSE_STAT_PNG"
 house_kv "Repository Size" "$(house_repository_size "$REPO_ROOT")"
 
 printf "\n"

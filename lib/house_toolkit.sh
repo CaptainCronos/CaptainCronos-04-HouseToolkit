@@ -209,3 +209,35 @@ house_repository_size() {
     root="$(house_repo_root "${1:-$(house_find_repo_root)}")" || return 1
     du -sh --exclude='.git' "$root" 2>/dev/null | awk '{print $1}'
 }
+
+# Collect the counts used by housestats in one filesystem traversal. The
+# individual helpers above remain public for backward compatibility.
+house_collect_stats() {
+    local root="$1"
+    local record
+    local type
+    local path
+    local lower_path
+
+    HOUSE_STAT_DIRECTORIES=0
+    HOUSE_STAT_FILES=0
+    HOUSE_STAT_MARKDOWN=0
+    HOUSE_STAT_PNG=0
+
+    while IFS= read -r -d '' record; do
+        type="${record%%$'\t'*}"
+        path="${record#*$'\t'}"
+        case "$type" in
+            d) ((HOUSE_STAT_DIRECTORIES += 1)) ;;
+            f)
+                ((HOUSE_STAT_FILES += 1))
+                lower_path="${path,,}"
+                case "$lower_path" in
+                    *.md) ((HOUSE_STAT_MARKDOWN += 1)) ;;
+                    *.png) ((HOUSE_STAT_PNG += 1)) ;;
+                esac
+                ;;
+        esac
+    done < <(find "$root" -mindepth 1 -path "$root/.git" -prune -o \
+        \( -type d -o -type f \) -printf '%y\t%p\0')
+}

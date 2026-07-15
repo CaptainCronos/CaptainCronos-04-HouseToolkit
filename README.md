@@ -1,88 +1,148 @@
 # Captain Cronos House Toolkit
 
-Version: 0.1.0-alpha1
+Version: 1.1.0-dev
 
 Codename: Cerberus
 
-Automation toolkit for the House of Tartarus ecosystem.
+Captain Cronos House Toolkit is a dependency-light Bash framework for managing
+House of Tartarus repositories. It provides a consistent command-line workflow
+for repository inspection, validation, member and HouseCard initialization,
+and readiness checks across the build, preview, release, and publish stages.
 
-This toolkit provides command-line utilities for managing the House of Tartarus repositories, including asset indexing, validation, preview generation, release packaging, member management, and publishing.
+The current framework deliberately does not render PNG, PDF, or HTML output,
+package releases, or publish artifacts. Commands for those pipeline stages
+validate and inspect the existing repository workspaces only.
 
-Current Commands
+## Major Features
 
-- househelp
-- housestats
-- houseindex
-- housevalidate
-- housemember
-- housecard
-- housebuild
-- housepreview
-- houserelease
-- housepublish
+- Per-user installation into `~/.local/bin` without `sudo`
+- Toolkit, House, and standard repository profile detection
+- Idempotent standard repository initialization
+- Deterministic repository statistics and asset indexing
+- Interactive member initialization with stable UUID metadata
+- Versioned HouseCard metadata initialization
+- Build, preview, release, and publish workspace inspection
+- Shared CLI parsing, exit-code conventions, and path resolution
+- Dependency-free Bash regression tests for the CLI and installer
 
-## HouseBuild
+## Installation
 
-HouseBuild is the rendering-engine stage between HouseCard and HousePreview.
-Its build workspace contains `cards/`, `html/`, `png/`, `svg/`, `pdf/`, and
-`logs/` directories under `build/`. The initial framework validates readiness
-only: it does not render, preview, publish, package, print, email, or upload.
+HouseToolkit targets Bash on GNU/Linux and requires Git and standard GNU
+command-line utilities. `housemember add` also requires `uuidgen`.
 
-Use `housebuild status` to inspect the workspace, `housebuild clean` to remove
-only manifest-tracked generated artifacts, `housebuild build` to validate every
-pipeline stage and build directory, `housebuild member <member-id>` to validate
-one member and HouseCard, and `housebuild all` to enumerate all build-ready
-members. No HouseBuild command currently generates an artifact.
+Install command symlinks for the current user:
 
-## HousePreview
+```bash
+./install/install.sh
+```
 
-HousePreview is the inspection stage between HouseBuild and HouseRelease. It
-provides a workspace for ASCII, HTML, and PNG previews without printing,
-packaging, publishing, or exporting PDFs. Rendering is not implemented in this
-initial framework.
+The installer links all eleven commands into `~/.local/bin`; it does not copy the
+repository, use system directories, or edit shell configuration. If the user
+command directory is not on `PATH`, the installer prints the optional line to
+add to `~/.bashrc`.
 
-Use `housepreview status` to inspect the workspace, `housepreview list` to list
-available previews, `housepreview clean` to remove generated preview files,
-`housepreview build` to verify repository readiness, and
-`housepreview member <member-id>` to verify that a member is ready to preview.
-Cleanup removes only paths tracked in the generated-preview manifest and
-preserves `.gitkeep` and manually created workspace files.
+Validate or remove the installation with:
 
-## HouseRelease
+```bash
+./install/install.sh --check
+./install/install.sh --repair
+./install/uninstall.sh --check
+./install/uninstall.sh
+```
 
-HouseRelease is the packaging stage between HousePreview and HousePublish. It
-collects generated assets in format-specific directories under `release/`; it
-does not render cards.
+Both `--check` modes are read-only. The uninstaller removes only links that
+belong to the current repository and preserves unrelated files and links.
 
-Use `houserelease status` to inspect package counts and manifests,
-`houserelease list` to list available packages, `houserelease clean` to remove
-generated package files, and `houserelease build` to verify packaging readiness.
+## Quick Start
 
-## HousePublish
+Commands can be run after installation or directly from `bin/` during
+development:
 
-HousePublish is the final Toolkit stage. It is responsible only for publishing
-an already-built release. The initial framework provides deterministic status,
-listing, validation, publishing, cleanup, and help placeholders; it does not
-package or upload anything.
+```bash
+househelp
+housevalidate
+houseindex
+housemember add
+housecard create <member-id>
+housebuild member <member-id>
+housepreview member <member-id>
+houserelease build
+housepublish validate
+```
 
-Its workspace contains `publish/logs/`, `publish/packages/`, and
-`publish/manifests/`. Use `housepublish status` to inspect publish readiness,
-`housepublish list` to list staged packages and manifests, `housepublish
-validate` to run the validation placeholder, `housepublish publish` to run the
-publishing placeholder, and `housepublish clean` to remove generated artifacts
-from the publish workspace while preserving `.gitkeep` files.
+The workflow is:
 
-## Repository profiles
+```text
+housemember -> housecard -> housebuild -> housepreview -> houserelease -> housepublish
+```
 
-`housevalidate` recognizes Toolkit repositories by `.house-toolkit` and House
-repositories by `.house-repository`. Repositories without a marker use legacy
-directory detection.
+The last four stages report readiness; they do not generate or publish output.
 
-## Architecture
+## Command Summary
 
-See [HouseToolkit Architecture](docs/ARCHITECTURE.md) for the repository and
-module architecture.
+| Command | Purpose |
+|---|---|
+| `househelp` | Display the HouseToolkit front page. |
+| `houseinit <repository-path>` | Initialize standard repository metadata. |
+| `housestats [repository-path]` | Display Git and filesystem statistics. |
+| `houseindex [repository-path]` | Generate deterministic `ASSET_INDEX.md`. |
+| `housevalidate [repository-path]` | Validate a Toolkit or House repository. |
+| `housemember add` | Interactively initialize a member. |
+| `housecard create <member-id>` | Initialize HouseCard metadata. |
+| `housebuild <command>` | Inspect and validate build readiness. |
+| `housepreview <command>` | Inspect and validate preview readiness. |
+| `houserelease <command>` | Inspect and validate release readiness. |
+| `housepublish <command>` | Inspect the publish workspace and placeholders. |
 
-Status
+Every command supports `-h` and `--help`. Workflow commands also accept the
+`help` subcommand. See [Command Reference](docs/COMMANDS.md) for subcommands,
+output expectations, and exit codes.
 
-Early Development
+## Repository Layout
+
+| Path | Contents |
+|---|---|
+| `bin/` | User-facing commands |
+| `lib/` | Shared CLI, path, validation, and workflow libraries |
+| `install/` | Per-user installer and uninstaller |
+| `docs/` | Architecture, command, standards, and development docs |
+| `tests/` | CLI and installer regression suites |
+| `build/` | Build-stage workspace placeholders |
+| `preview/` | ASCII, HTML, and PNG preview workspaces |
+| `release/` | PDF, PNG, JPG, and ZIP release workspaces |
+| `publish/` | Publish logs, packages, and manifests workspaces |
+| `ASSET_INDEX.md` | Generated repository file index |
+
+Toolkit repositories are marked by `.house-toolkit`; managed House
+repositories use `.house-repository`. Commands resolve their repository from
+the executable path, so installed commands work from any current directory.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Command Reference](docs/COMMANDS.md)
+- [Development](docs/DEVELOPMENT.md)
+- [Project Standards](docs/STANDARDS.md)
+- [Release Readiness](docs/RELEASE_READINESS.md)
+- [Generated Asset Index](ASSET_INDEX.md)
+
+## Development
+
+Run the regression suites and release checks from the repository root:
+
+```bash
+bash tests/test_cli.sh
+bash tests/test_install.sh
+bash tests/test_validation.sh
+bash tests/test_workflows.sh
+bash -n bin/* lib/*.sh lib/validators/*.sh install/*.sh tests/*.sh
+git diff --check
+```
+
+Generated workspace files are ignored. Cleanup commands are intentionally
+scoped to their own workspaces; review [Development](docs/DEVELOPMENT.md)
+before changing cleanup or path-resolution behavior.
+
+## License
+
+HouseToolkit is released under the [MIT License](LICENSE).

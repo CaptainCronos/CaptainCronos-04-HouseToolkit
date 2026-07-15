@@ -1,11 +1,30 @@
 # TODO
 
-## Milestones
+## v1.1.0 Development
 
-1. Foundation — Complete
-2. Member Management — Active
-3. Business Cards — HouseBuild and HousePreview Initial Frameworks Complete
-4. Branding
-5. Website
-6. Publishing — HouseRelease and HousePublish Initial Frameworks Complete
-7. Maintenance
+### Bug Fixes
+
+- Audit defects found by cross-repository validation and add regression tests.
+- Continue verifying safe cleanup boundaries in workflow commands.
+
+### Enhancements
+
+- Exercise `houseinit` and `housevalidate` against newly created repositories.
+- Add fixtures representing HouseMembers when that repository is available.
+- Expand installer tests for repository moves on additional Linux environments.
+
+### Future Features
+
+- Evaluate non-interactive member creation without changing the interactive API.
+- Evaluate machine-readable validation output for automation.
+
+### Technical Debt
+
+- Move remaining duplicated workflow readiness checks into small shared helpers.
+- Benchmark startup on larger repositories before further optimization.
+
+### Potential v1.2 Ideas
+
+- Opt-in repository policy files for project-specific validation.
+- Shell completion scripts generated from the command inventory.
+- Portable structured-manifest validation without adding a hard dependency.

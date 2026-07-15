@@ -10,7 +10,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
@@ -18,6 +18,8 @@ source "${SCRIPT_DIR}/../lib/paths.sh"
 source "${SCRIPT_DIR}/../lib/cli.sh"
 # shellcheck source=../lib/house_toolkit.sh
 source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
+
+REPO_ROOT="$HOUSE_ROOT"
 
 househelp_usage() {
     printf 'Usage: househelp\n'
@@ -33,15 +35,43 @@ fi
 
 house_banner
 
+house_section "Purpose"
+
+printf '%s\n' \
+    ' Inspect and validate House repositories, initialize member and HouseCard' \
+    ' metadata, and check each workflow stage for readiness.' \
+    '' \
+    ' Rendering, packaging, uploading, and publishing are not implemented.'
+
+house_section "Quick Workflow"
+
+printf '%s\n' \
+    ' housemember -> housecard -> housebuild -> housepreview -> houserelease' \
+    ' -> housepublish'
+
 house_section "Available Commands"
 
 house_kv "househelp"     "Display this help screen."
+house_kv "houseinit"     "Initialize a standard repository profile."
 house_kv "housestats"    "Display repository statistics."
 house_kv "houseindex"    "Generate ASSET_INDEX.md for a repository."
 house_kv "housevalidate" "Validate Toolkit or House repository structure."
 house_kv "housemember"   "Manage HouseToolkit members."
 house_kv "housecard"     "Initialize HouseCard metadata for a member."
-house_kv "housebuild"    "Validate HouseCard build readiness."
-house_kv "housepreview"  "Preview generated HouseCards."
-house_kv "houserelease"  "Prepare and inspect release packages."
-house_kv "housepublish"  "Publish an already-built release."
+house_kv "housebuild"    "Inspect and validate build readiness."
+house_kv "housepreview"  "Inspect and validate preview readiness."
+house_kv "houserelease"  "Inspect and validate release readiness."
+house_kv "housepublish"  "Inspect publish workspace placeholders."
+
+house_section "Documentation"
+
+house_kv "README"        "$REPO_ROOT/README.md"
+house_kv "Commands"      "$REPO_ROOT/docs/COMMANDS.md"
+house_kv "Architecture"  "$REPO_ROOT/docs/ARCHITECTURE.md"
+house_kv "Development"   "$REPO_ROOT/docs/DEVELOPMENT.md"
+
+house_section "Repository Information"
+
+house_kv "Repository"    "$(house_repo_name "$REPO_ROOT")"
+house_kv "Path"          "$REPO_ROOT"
+house_kv "Marker"        ".house-toolkit"

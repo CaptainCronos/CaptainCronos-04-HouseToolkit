@@ -12,7 +12,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # shellcheck source=../lib/paths.sh
 source "${SCRIPT_DIR}/../lib/paths.sh"
@@ -24,7 +24,12 @@ source "${SCRIPT_DIR}/../lib/house_toolkit.sh"
 source "${SCRIPT_DIR}/../lib/validation.sh"
 
 housevalidate_usage() {
-    printf 'Usage: housevalidate [repository-path]\n'
+    cat <<'EOF'
+Usage: housevalidate [repository-path]
+
+Validate a Toolkit, House, or standard repository.
+Exit status: 0 pass, 1 warnings, 2 failure or invalid usage.
+EOF
 }
 
 if house_cli_is_help_option "${1:-}"; then
@@ -69,7 +74,7 @@ else
     case "$HOUSE_PROFILE_SOURCE" in
         "conflicting markers")
             house_validation_result FAIL "Repository profile" \
-                "both .house-toolkit and .house-repository are present"
+                "multiple repository profile markers are present"
             ;;
         *)
             house_validation_result FAIL "Repository profile" \
