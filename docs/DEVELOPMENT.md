@@ -17,6 +17,7 @@ The test suite is dependency-free beyond the tools used by the Toolkit:
 ```bash
 bash tests/test_cli.sh
 bash tests/test_housecard.sh
+bash tests/test_housebuild.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -29,6 +30,11 @@ repository paths, and workflow command execution from an unrelated directory.
 normalized creation, complete workspace metadata, duplicate protection,
 failure exit codes, explicit recreation, preservation of unrelated assets, and
 downstream HouseBuild readiness.
+
+`tests/test_housebuild.sh` verifies complete per-member handoffs, source
+validation, predictable stage directories, duplicate and force behavior,
+non-rendering boundaries, generated-file manifests, and preservation of user
+files during rebuild and cleanup.
 
 `tests/test_install.sh` uses temporary `HOME` directories. It verifies install,
 check, repair, repeat install, uninstall, collision safety, command execution
@@ -87,6 +93,8 @@ housemember add
 housemember add <member-id>
 housecard create <member-id>
 housecard create <member-id> --force
+housebuild <member-id>
+housebuild <member-id> --force
 housebuild member <member-id>
 housebuild all
 housebuild build
@@ -97,10 +105,10 @@ housepublish validate
 housepublish publish
 ```
 
-Expected placeholder behavior is part of the current contract: HouseBuild and
-HousePreview validate without rendering, HouseRelease validates without
-packaging, and HousePublish validates or reports zero published artifacts
-without uploading.
+Expected non-rendering behavior is part of the current contract: HouseBuild
+creates validated metadata handoffs, HousePreview validates without rendering,
+HouseRelease validates without packaging, and HousePublish validates or reports
+zero published artifacts without uploading.
 
 ## Release Checks
 
@@ -110,6 +118,7 @@ Before committing, run:
 bash -n bin/* lib/*.sh lib/validators/*.sh install/*.sh tests/*.sh
 bash tests/test_cli.sh
 bash tests/test_housecard.sh
+bash tests/test_housebuild.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

@@ -7,21 +7,21 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/housecard-workflow` |
-| Commit | `8d96e5c` |
+| Branch | `feature/housebuild-pipeline` |
+| Commit | `073a799` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 63 |
+| Repository files | 65 |
 | Directories represented | 26 |
 | Markdown | 9 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 54 |
+| Other files | 56 |
 
 ## Files by Top-Level Directory
 
@@ -89,6 +89,7 @@
 - `lib/validators/house.sh`
 - `lib/validators/standard.sh`
 - `lib/validators/toolkit.sh`
+- `lib/workspace.sh`
 
 ### preview
 
@@ -113,6 +114,7 @@
 ### tests
 
 - `tests/test_cli.sh`
+- `tests/test_housebuild.sh`
 - `tests/test_housecard.sh`
 - `tests/test_install.sh`
 - `tests/test_validation.sh`

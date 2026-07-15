@@ -16,6 +16,7 @@
 ### Future Features
 
 - Evaluate machine-readable validation output for automation.
+- Teach HousePreview to consume validated HouseBuild `build.yml` handoffs.
 
 ### Technical Debt
 
@@ -27,5 +28,5 @@
 - Opt-in repository policy files for project-specific validation.
 - Shell completion scripts generated from the command inventory.
 - Portable structured-manifest validation without adding a hard dependency.
-- Consume HouseCard workflow paths when rendering and packaging stages are
+- Consume validated HouseBuild handoffs when rendering and packaging stages are
   implemented.

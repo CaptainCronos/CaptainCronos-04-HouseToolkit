@@ -111,6 +111,8 @@ repository state.
 ### `housebuild`
 
 ```text
+housebuild <member-id>
+housebuild <member-id> --force
 housebuild status
 housebuild clean
 housebuild build
@@ -119,6 +121,12 @@ housebuild all
 housebuild help
 ```
 
+- Direct member builds validate the member profile and complete HouseCard
+  schema, then create `build/cards/<member-id>/` with profile and HouseCard
+  snapshots, `build.yml`, and a README. The manifest is the downstream input
+  contract; no SVG, PDF, PNG, or HTML is rendered.
+- A duplicate direct build is preserved with status `1`. `--force` refreshes
+  only Toolkit-owned handoff files while retaining unrelated build assets.
 - `status` reports repository, workspace, artifact, member, and version data.
 - `clean` removes only safe files listed by the generated-artifact manifest.
 - `build` validates repository, members, HouseCards, and all pipeline
@@ -126,7 +134,9 @@ housebuild help
 - `member` validates one member and HouseCard.
 - `all` enumerates and validates all members with HouseCards.
 
-No subcommand renders an artifact.
+Direct builds return `0` after creation or rebuilding, `1` when an existing
+handoff is preserved, and `2` for invalid usage or validation failures. No
+subcommand renders an artifact.
 
 ### `housepreview`
 

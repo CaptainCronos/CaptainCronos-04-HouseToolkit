@@ -98,6 +98,8 @@ assert_success "housecard initializes non-interactive member metadata"
 
 run_command "$FIXTURE/bin/housebuild" member captain
 assert_success "housebuild validates one member"
+run_command "$FIXTURE/bin/housebuild" captain
+assert_success "housebuild creates a member handoff"
 run_command "$FIXTURE/bin/housebuild" all
 assert_success "housebuild validates all members"
 run_command "$FIXTURE/bin/housebuild" build

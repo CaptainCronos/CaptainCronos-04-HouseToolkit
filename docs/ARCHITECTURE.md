@@ -39,6 +39,8 @@ Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
   filesystem helpers.
 - `housemember.sh` normalizes member IDs, validates member profiles, and creates
   member metadata and assets for interactive and non-interactive entry points.
+- `workspace.sh` provides symlink-safe directory preparation, atomic generated
+  file installation, and generated-file manifest updates for pipeline stages.
 - `validation.sh` detects repository profiles, dispatches profile validators,
   records result counts, and maps summaries to exit codes.
 - `validators/` contains the Toolkit and House structural validators.
@@ -126,9 +128,33 @@ housemember -> housecard -> housebuild -> housepreview -> houserelease -> housep
 
 ### HouseBuild
 
-HouseBuild validates the repository, member profiles, HouseCards, downstream
-workspace directories, and build directories. Its workspace is `build/`, with
-`cards/`, `html/`, `png/`, `svg/`, `pdf/`, and `logs/` subdirectories.
+`housebuild <member-id> [--force]` validates the repository, member profile, and
+complete HouseCard metadata before creating this non-rendered handoff:
+
+```text
+build/
+├── .housebuild-generated
+├── cards/<member-id>/
+│   ├── profile.yml
+│   ├── card.yml
+│   ├── build.yml
+│   └── README.md
+├── html/
+├── png/
+├── svg/
+├── pdf/
+└── logs/
+```
+
+The profile and HouseCard files are validated snapshots. `build.yml` records
+expected output paths and acts as the input contract for future preview,
+release, and publish pipelines. HouseBuild deliberately does not create empty
+or misleading rendered files.
+
+Existing member handoffs are preserved with warning status `1`. Explicit
+`--force` refreshes only the four Toolkit-owned files and retains other files
+throughout `build/`. The legacy `status`, `build`, `member`, and `all`
+readiness commands remain available.
 
 `housebuild clean` removes only regular files named in
 `build/.housebuild-generated` after applying path-safety checks. It preserves

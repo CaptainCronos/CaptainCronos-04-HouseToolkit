@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 #==============================================================================
-# HouseBuild workspace inspection and readiness helpers.
+# HouseBuild pipeline, workspace inspection, and readiness helpers.
 #==============================================================================
 
 [[ -n "${HOUSE_BUILD_LOADED:-}" ]] && return
 HOUSE_BUILD_LOADED=1
 
+HOUSE_BUILD_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=housecard.sh
+source "${HOUSE_BUILD_LIB_DIR}/housecard.sh"
+# shellcheck source=workspace.sh
+source "${HOUSE_BUILD_LIB_DIR}/workspace.sh"
+
 HOUSE_BUILD_TYPES=(cards html png svg pdf logs)
+HOUSE_BUILD_ERROR=""
+HOUSE_BUILD_RESULT=""
+HOUSE_BUILD_MEMBER_DIR=""
+HOUSE_BUILD_MANIFEST_PATH=""
 
 housebuild_usage() {
     printf '%s\n' \
-        'Usage: housebuild <command>' \
+        'Usage: housebuild <member-id> [--force]' \
+        '       housebuild <command>' \
+        '' \
+        'Build a validated member and HouseCard handoff without rendering.' \
         '' \
         'Commands:' \
         '  status               Display build workspace status.' \
@@ -18,6 +32,191 @@ housebuild_usage() {
         '  build                Verify HouseBuild readiness.' \
         '  member <member-id>   Verify member build readiness.' \
         '  all                  Enumerate all build-ready members.'
+}
+
+housebuild_reject() {
+    HOUSE_BUILD_ERROR="$1"
+    return 2
+}
+
+housebuild_write_manifest() {
+    local manifest_path="$1"
+    local member_id="$2"
+    local member_uuid="$3"
+    local display_name="$4"
+
+    printf '%s\n' \
+        'version: 1' \
+        '' \
+        'member:' \
+        "  id: ${member_id}" \
+        "  uuid: ${member_uuid}" \
+        "  display_name: ${display_name}" \
+        '' \
+        'source:' \
+        "  profile: members/${member_id}/profile.yml" \
+        "  housecard: members/${member_id}/card/card.yml" \
+        '' \
+        'artifacts:' \
+        "  profile: build/cards/${member_id}/profile.yml" \
+        "  housecard: build/cards/${member_id}/card.yml" \
+        "  manifest: build/cards/${member_id}/build.yml" \
+        '' \
+        'expected_outputs:' \
+        "  svg: build/svg/${member_id}.svg" \
+        "  pdf: build/pdf/${member_id}.pdf" \
+        "  png: build/png/${member_id}.png" \
+        "  html: build/html/${member_id}.html" \
+        '' \
+        'handoff:' \
+        "  preview: build/cards/${member_id}/build.yml" \
+        "  release: build/cards/${member_id}/build.yml" \
+        "  publish: build/cards/${member_id}/build.yml" \
+        '' \
+        'toolkit:' \
+        "  version: ${HOUSE_VERSION}" \
+        "  codename: ${HOUSE_CODENAME}" \
+        '' \
+        'status:' \
+        '  built: true' \
+        '  rendered: false' > "$manifest_path"
+}
+
+housebuild_write_readme() {
+    local readme_path="$1"
+    local member_id="$2"
+
+    printf '%s\n' \
+        "# HouseBuild: ${member_id}" \
+        '' \
+        'This directory is the validated, non-rendered HouseBuild handoff.' \
+        '' \
+        '- `profile.yml` is the validated member profile snapshot.' \
+        '- `card.yml` is the validated HouseCard snapshot.' \
+        '- `build.yml` defines expected outputs and downstream handoffs.' \
+        '' \
+        'Rendered files will be produced by a future rendering milestone.' \
+        > "$readme_path"
+}
+
+housebuild_create() {
+    local root="$1"
+    local requested_member_id="$2"
+    local force="$3"
+    local build_dir
+    local build_type
+    local member_build_existed=0
+    local relative_base
+    local profile_target
+    local card_target
+    local manifest_target
+    local readme_target
+
+    HOUSE_BUILD_ERROR=""
+    HOUSE_BUILD_RESULT=""
+    HOUSE_BUILD_MEMBER_DIR=""
+    HOUSE_BUILD_MANIFEST_PATH=""
+
+    house_validation_reset
+    house_banner
+    house_section "HouseBuild Pipeline"
+
+    if ! housebuild_validate_repository "$root"; then
+        house_validation_result FAIL "HouseBuild" "repository validation failed"
+        return 2
+    fi
+    house_validate_repository "$root" "$HOUSE_REPOSITORY_PROFILE"
+    if (( HOUSE_FAIL_COUNT > 0 )); then
+        house_validation_result FAIL "HouseBuild" "repository validation failed"
+        return 2
+    fi
+
+    if ! housecard_validate_metadata "$requested_member_id"; then
+        house_validation_result FAIL "HouseCard" "$HOUSE_CARD_ERROR"
+        house_validation_result FAIL "HouseBuild" "member validation failed"
+        return 2
+    fi
+    house_validation_result PASS "Member '${HOUSE_MEMBER_ID}'" \
+        "$HOUSE_MEMBER_DIR"
+    house_validation_result PASS "Member profile.yml" "version 1; metadata valid"
+    house_validation_result PASS "HouseCard card.yml" "version 1; metadata valid"
+
+    build_dir="$(house_build_dir)"
+    if ! house_workspace_prepare_directory "$build_dir"; then
+        house_validation_result FAIL "Build workspace" "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+    for build_type in "${HOUSE_BUILD_TYPES[@]}"; do
+        if ! house_workspace_prepare_directory "$build_dir/$build_type"; then
+            house_validation_result FAIL "Build workspace" \
+                "$HOUSE_WORKSPACE_ERROR"
+            return 2
+        fi
+    done
+
+    HOUSE_BUILD_MEMBER_DIR="$build_dir/cards/$HOUSE_MEMBER_ID"
+    if [[ -L "$HOUSE_BUILD_MEMBER_DIR" ]]; then
+        house_validation_result FAIL "Member build workspace" \
+            "must not be a symlink"
+        return 2
+    elif [[ -d "$HOUSE_BUILD_MEMBER_DIR" ]]; then
+        member_build_existed=1
+        if (( force == 0 )); then
+            house_validation_result WARN "HouseBuild '${HOUSE_MEMBER_ID}'" \
+                "already exists; use --force to rebuild it"
+            return 1
+        fi
+    elif [[ -e "$HOUSE_BUILD_MEMBER_DIR" ]]; then
+        house_validation_result FAIL "Member build workspace" \
+            "path exists and is not a directory"
+        return 2
+    elif ! house_workspace_prepare_directory "$HOUSE_BUILD_MEMBER_DIR"; then
+        house_validation_result FAIL "Member build workspace" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    profile_target="$HOUSE_BUILD_MEMBER_DIR/profile.yml"
+    card_target="$HOUSE_BUILD_MEMBER_DIR/card.yml"
+    manifest_target="$HOUSE_BUILD_MEMBER_DIR/build.yml"
+    readme_target="$HOUSE_BUILD_MEMBER_DIR/README.md"
+
+    if ! house_workspace_copy_atomic \
+            "$HOUSE_MEMBER_PROFILE_PATH" "$profile_target" ||
+            ! house_workspace_copy_atomic "$HOUSE_CARD_PATH" "$card_target" ||
+            ! house_workspace_write_atomic "$manifest_target" \
+                housebuild_write_manifest \
+                "$HOUSE_MEMBER_ID" "$HOUSE_MEMBER_UUID" \
+                "$HOUSE_MEMBER_DISPLAY_NAME" ||
+            ! house_workspace_write_atomic "$readme_target" \
+                housebuild_write_readme "$HOUSE_MEMBER_ID"; then
+        house_validation_result FAIL "Generated build artifacts" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    relative_base="cards/$HOUSE_MEMBER_ID"
+    HOUSE_BUILD_MANIFEST_PATH="$build_dir/.housebuild-generated"
+    if ! house_workspace_record_generated "$HOUSE_BUILD_MANIFEST_PATH" \
+            "$relative_base/profile.yml" \
+            "$relative_base/card.yml" \
+            "$relative_base/build.yml" \
+            "$relative_base/README.md"; then
+        house_validation_result FAIL "Generated-file manifest" \
+            "$HOUSE_WORKSPACE_ERROR"
+        return 2
+    fi
+
+    if (( member_build_existed > 0 )); then
+        HOUSE_BUILD_RESULT="rebuilt"
+    else
+        HOUSE_BUILD_RESULT="built"
+    fi
+    house_validation_result PASS "Build workspace" "$HOUSE_BUILD_MEMBER_DIR"
+    house_validation_result PASS "Validated snapshots" "$HOUSE_BUILD_RESULT"
+    house_validation_result PASS "build.yml handoff" "$HOUSE_BUILD_RESULT"
+    house_validation_result PASS "Generated-file manifest" "updated"
+    house_validation_result INFO "Rendering" "not performed"
 }
 
 housebuild_member_count() {

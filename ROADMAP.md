@@ -29,6 +29,8 @@ The final release assessment is recorded in
   interactive workflow.
 - Complete HouseCard workspace creation with safe, explicit recreation and
   downstream workflow metadata.
+- Produce validated, non-rendered HouseBuild handoffs for downstream stages
+  while preserving legacy readiness commands.
 - Improve startup performance only where filesystem or Git work is measurable.
 
 Compatibility with v1.0.0-rc1 commands and workflows remains a release

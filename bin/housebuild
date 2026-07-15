@@ -2,7 +2,7 @@
 #==============================================================================
 # Captain Cronos House Toolkit
 # Command : housebuild
-# Purpose : Validate HouseCard build readiness.
+# Purpose : Build validated HouseCard handoffs and inspect readiness.
 #==============================================================================
 
 set -o errexit
@@ -51,6 +51,13 @@ case "${1:-}" in
         housebuild_all "$REPO_ROOT"
         ;;
     *)
-        house_cli_usage_error housebuild_usage
+        house_cli_expect_args "$#" 1 2 housebuild_usage
+        force=0
+        if (( $# == 2 )) && [[ "$2" != "--force" ]]; then
+            house_cli_usage_error housebuild_usage
+        elif (( $# == 2 )); then
+            force=1
+        fi
+        housebuild_create "$REPO_ROOT" "$1" "$force"
         ;;
 esac

@@ -14,6 +14,7 @@ source "${HOUSE_CARD_LIB_DIR}/housemember.sh"
 HOUSE_CARD_ERROR=""
 HOUSE_CARD_RESULT=""
 HOUSE_CARD_DIR=""
+HOUSE_CARD_PATH=""
 
 housecard_reject() {
     HOUSE_CARD_ERROR="$1"
@@ -24,6 +25,128 @@ housecard_reject() {
 # reader before member profile validation became shared behavior.
 housecard_profile_member_value() {
     house_member_profile_value "$@"
+}
+
+housecard_metadata_value() {
+    local card_path="$1"
+    local section="$2"
+    local key="$3"
+
+    awk -v section="$section" -v key="$key" '
+        $0 == section ":" {
+            in_section = 1
+            next
+        }
+        in_section && /^[^[:space:]#]/ {
+            exit
+        }
+        in_section && $0 ~ "^  " key ":[[:space:]]*" {
+            sub("^  " key ":[[:space:]]*", "")
+            sub(/[[:space:]]+$/, "")
+            print
+            exit
+        }
+    ' "$card_path"
+}
+
+housecard_validate_metadata() {
+    local requested_member_id="$1"
+    local card_version
+    local card_member_id
+    local card_member_uuid
+    local card_display_name
+    local section
+    local key
+    local expected
+    local actual
+    local specifications
+
+    HOUSE_CARD_ERROR=""
+    HOUSE_CARD_DIR=""
+    HOUSE_CARD_PATH=""
+
+    if ! house_member_validate_profile "$requested_member_id"; then
+        housecard_reject "$HOUSE_MEMBER_ERROR"
+        return
+    fi
+
+    HOUSE_CARD_DIR="$(house_member_card_dir "$HOUSE_MEMBER_ID")" || {
+        housecard_reject "Unable to locate the HouseCard directory."
+        return
+    }
+    HOUSE_CARD_PATH="${HOUSE_CARD_DIR}/card.yml"
+
+    if [[ -L "$HOUSE_CARD_DIR" ]]; then
+        housecard_reject \
+            "HouseCard path for '${HOUSE_MEMBER_ID}' must not be a symlink."
+        return
+    fi
+    if [[ ! -d "$HOUSE_CARD_DIR" || ! -f "$HOUSE_CARD_PATH" ||
+            -L "$HOUSE_CARD_PATH" ]]; then
+        housecard_reject "Member '${HOUSE_MEMBER_ID}' is missing card/card.yml."
+        return
+    fi
+
+    card_version="$(awk '$1 == "version:" { print $2; exit }' \
+        "$HOUSE_CARD_PATH")"
+    card_member_id="$(housecard_metadata_value \
+        "$HOUSE_CARD_PATH" member id)"
+    card_member_uuid="$(housecard_metadata_value \
+        "$HOUSE_CARD_PATH" member uuid)"
+    card_display_name="$(housecard_metadata_value \
+        "$HOUSE_CARD_PATH" member display_name)"
+
+    if [[ "$card_version" != "1" ]]; then
+        housecard_reject \
+            "HouseCard '${HOUSE_MEMBER_ID}' version must be 1."
+        return
+    fi
+    if [[ "$card_member_id" != "$HOUSE_MEMBER_ID" ||
+            "$card_member_uuid" != "$HOUSE_MEMBER_UUID" ||
+            "$card_display_name" != "$HOUSE_MEMBER_DISPLAY_NAME" ]]; then
+        housecard_reject \
+            "HouseCard member metadata does not match profile.yml."
+        return
+    fi
+    for section in assets templates; do
+        if [[ ! -d "$HOUSE_CARD_DIR/$section" ||
+                -L "$HOUSE_CARD_DIR/$section" ]]; then
+            housecard_reject \
+                "HouseCard $section workspace is missing or unsafe."
+            return
+        fi
+    done
+
+    specifications="$(printf '%s\n' \
+        "workspace|assets|members/${HOUSE_MEMBER_ID}/card/assets" \
+        "workspace|templates|members/${HOUSE_MEMBER_ID}/card/templates" \
+        "output|svg|build/svg/${HOUSE_MEMBER_ID}.svg" \
+        "output|pdf|build/pdf/${HOUSE_MEMBER_ID}.pdf" \
+        "output|png|build/png/${HOUSE_MEMBER_ID}.png" \
+        "output|html|build/html/${HOUSE_MEMBER_ID}.html" \
+        "build|svg|build/svg/${HOUSE_MEMBER_ID}.svg" \
+        "build|pdf|build/pdf/${HOUSE_MEMBER_ID}.pdf" \
+        "build|png|build/png/${HOUSE_MEMBER_ID}.png" \
+        "build|html|build/html/${HOUSE_MEMBER_ID}.html" \
+        "preview|ascii|preview/ascii/${HOUSE_MEMBER_ID}.txt" \
+        "preview|html|preview/html/${HOUSE_MEMBER_ID}.html" \
+        "preview|png|preview/png/${HOUSE_MEMBER_ID}.png" \
+        "release|pdf|release/pdf/${HOUSE_MEMBER_ID}.pdf" \
+        "release|png|release/png/${HOUSE_MEMBER_ID}.png" \
+        "release|jpg|release/jpg/${HOUSE_MEMBER_ID}.jpg" \
+        "release|archive|release/zip/${HOUSE_MEMBER_ID}.zip" \
+        "publish|manifest|publish/manifests/${HOUSE_MEMBER_ID}.yml" \
+        "publish|package|publish/packages/${HOUSE_MEMBER_ID}.zip" \
+        'status|initialized|true')"
+
+    while IFS='|' read -r section key expected; do
+        actual="$(housecard_metadata_value "$HOUSE_CARD_PATH" "$section" "$key")"
+        if [[ "$actual" != "$expected" ]]; then
+            housecard_reject \
+                "HouseCard ${section}.${key} is missing or invalid."
+            return
+        fi
+    done <<< "$specifications"
 }
 
 housecard_write_card() {
@@ -125,6 +248,7 @@ housecard_create() {
     HOUSE_CARD_ERROR=""
     HOUSE_CARD_RESULT=""
     HOUSE_CARD_DIR=""
+    HOUSE_CARD_PATH=""
 
     if ! house_member_validate_profile "$requested_member_id"; then
         housecard_reject "$HOUSE_MEMBER_ERROR"
@@ -136,6 +260,7 @@ housecard_create() {
         return
     }
     card_path="${HOUSE_CARD_DIR}/card.yml"
+    HOUSE_CARD_PATH="$card_path"
     readme_path="${HOUSE_CARD_DIR}/README.md"
 
     if [[ -L "$HOUSE_CARD_DIR" ]]; then

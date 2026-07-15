@@ -85,11 +85,17 @@ house_member_validate_profile() {
     }
     HOUSE_MEMBER_PROFILE_PATH="${HOUSE_MEMBER_DIR}/profile.yml"
 
+    if [[ -L "$HOUSE_MEMBER_DIR" ]]; then
+        house_member_reject \
+            "Member '${HOUSE_MEMBER_ID}' path must not be a symlink."
+        return
+    fi
     if [[ ! -d "$HOUSE_MEMBER_DIR" ]]; then
         house_member_reject "Member '${HOUSE_MEMBER_ID}' does not exist."
         return
     fi
-    if [[ ! -f "$HOUSE_MEMBER_PROFILE_PATH" ]]; then
+    if [[ ! -f "$HOUSE_MEMBER_PROFILE_PATH" ||
+            -L "$HOUSE_MEMBER_PROFILE_PATH" ]]; then
         house_member_reject \
             "Member '${HOUSE_MEMBER_ID}' is missing profile.yml."
         return

@@ -27,6 +27,11 @@
   preview, release, and publish stages.
 - Added explicit `--force` recreation for Toolkit-owned HouseCard files while
   preserving unrelated member assets and the existing non-overwrite default.
+- Added the first complete HouseBuild pipeline with validated member and
+  HouseCard snapshots, deterministic downstream handoff metadata, predictable
+  stage directories, and generated-file tracking.
+- Added explicit `--force` rebuilds, duplicate protection, shared safe-workspace
+  helpers, and cleanup coverage that preserves user-created build assets.
 
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 

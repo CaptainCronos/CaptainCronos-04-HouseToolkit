@@ -77,7 +77,7 @@ test_help housestats "Usage: housestats [repository-path]"
 test_help housevalidate "Usage: housevalidate [repository-path]"
 test_help housemember "Usage: housemember add [member-id]"
 test_help housecard "Usage: housecard create <member-id> [--force]"
-test_help housebuild "Usage: housebuild <command>"
+test_help housebuild "Usage: housebuild <member-id> [--force]"
 test_help housepreview "Usage: housepreview <command>"
 test_help houserelease "Usage: houserelease <command>"
 test_help housepublish "Usage: housepublish <command>"
@@ -93,6 +93,7 @@ test_invalid_arguments housecard create
 test_invalid_arguments housecard create member --unknown
 test_invalid_arguments housecard create --force
 test_invalid_arguments housebuild status extra
+test_invalid_arguments housebuild member-id --unknown
 test_invalid_arguments housepreview member
 test_invalid_arguments houserelease unknown
 test_invalid_arguments housepublish publish extra
