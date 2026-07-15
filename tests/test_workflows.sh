@@ -77,6 +77,8 @@ assert_success "housemember initializes a member"
 run_command "$FIXTURE/bin/housemember" add Automated.Member
 assert_success "housemember initializes a member non-interactively"
 if [[ "$COMMAND_OUTPUT" != *"Member ID:"* ]] &&
+        grep -q '^schema: 1$' \
+            "$FIXTURE/members/automated.member/profile.yml" &&
         grep -q '^  id: automated.member$' \
             "$FIXTURE/members/automated.member/profile.yml" &&
         grep -q '^  display_name: Automated.Member$' \

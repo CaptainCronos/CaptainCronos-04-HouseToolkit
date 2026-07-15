@@ -9,6 +9,7 @@
 - HouseRelease and HousePublish workspace frameworks
 - Shared CLI conventions and per-user installer
 - CLI and installer regression tests
+- Linux portability, environment validation, and schema hardening
 
 ## v1.0.0-rc1
 
@@ -35,6 +36,8 @@ The final release assessment is recorded in
   HouseRelease pipeline.
 - Produce checksummed HouseRelease metadata as the sole input contract for a
   future HousePublish pipeline, without creating distributable packages.
+- Provide a stable Linux portability layer across Ubuntu-family, Debian,
+  Fedora, Arch, and WSL2 environments before HousePublish implementation.
 - Improve startup performance only where filesystem or Git work is measurable.
 
 Compatibility with v1.0.0-rc1 commands and workflows remains a release

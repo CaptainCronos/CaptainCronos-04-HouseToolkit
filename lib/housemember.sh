@@ -6,6 +6,9 @@
 [[ -n "${HOUSE_MEMBER_LOADED:-}" ]] && return
 HOUSE_MEMBER_LOADED=1
 
+# shellcheck source=metadata.sh
+source "${HOUSE_LIB_DIR}/metadata.sh"
+
 HOUSE_MEMBER_ERROR=""
 HOUSE_MEMBER_ID=""
 HOUSE_MEMBER_DISPLAY_NAME=""
@@ -100,6 +103,11 @@ house_member_validate_profile() {
             "Member '${HOUSE_MEMBER_ID}' is missing profile.yml."
         return
     fi
+    if ! house_metadata_validate_schema "$HOUSE_MEMBER_PROFILE_PATH" \
+            "Member '${HOUSE_MEMBER_ID}' profile" 1; then
+        house_member_reject "$HOUSE_METADATA_ERROR"
+        return
+    fi
 
     profile_version="$(awk '$1 == "version:" { print $2; exit }' \
         "$HOUSE_MEMBER_PROFILE_PATH")"
@@ -188,6 +196,7 @@ house_member_create() {
     fi
 
     if ! printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \

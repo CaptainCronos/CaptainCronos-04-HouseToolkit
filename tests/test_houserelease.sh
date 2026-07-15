@@ -115,7 +115,9 @@ else
     fail "HouseRelease workspace is incomplete"
 fi
 
-if cmp -s "$FIXTURE/preview/manifests/release.member/preview.yml" \
+if grep -q '^schema: 1$' "$MEMBER_RELEASE_DIR/package.yml" &&
+        grep -q '^schema: 1$' "$MEMBER_RELEASE_DIR/release.yml" &&
+        cmp -s "$FIXTURE/preview/manifests/release.member/preview.yml" \
         "$MEMBER_RELEASE_DIR/preview.yml" &&
         grep -q '^  version: 1.1.0-dev$' \
             "$MEMBER_RELEASE_DIR/package.yml" &&
@@ -164,7 +166,8 @@ printf 'outdated preview snapshot\n' > "$MEMBER_RELEASE_DIR/preview.yml"
 run_command "$FIXTURE/bin/houserelease" release.member --force
 assert_status 0 "--force release recreation succeeds"
 assert_contains "recreated" "--force reports release recreation"
-if grep -q '^version: 1$' "$MEMBER_RELEASE_DIR/release.yml" &&
+if grep -q '^schema: 1$' "$MEMBER_RELEASE_DIR/release.yml" &&
+        grep -q '^version: 1$' "$MEMBER_RELEASE_DIR/release.yml" &&
         cmp -s "$FIXTURE/preview/manifests/release.member/preview.yml" \
             "$MEMBER_RELEASE_DIR/preview.yml" &&
         grep -q '^custom release metadata$' \

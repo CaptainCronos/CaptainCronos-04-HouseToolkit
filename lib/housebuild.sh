@@ -6,12 +6,10 @@
 [[ -n "${HOUSE_BUILD_LOADED:-}" ]] && return
 HOUSE_BUILD_LOADED=1
 
-HOUSE_BUILD_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=housecard.sh
-source "${HOUSE_BUILD_LIB_DIR}/housecard.sh"
+source "${HOUSE_LIB_DIR}/housecard.sh"
 # shellcheck source=workspace.sh
-source "${HOUSE_BUILD_LIB_DIR}/workspace.sh"
+source "${HOUSE_LIB_DIR}/workspace.sh"
 
 HOUSE_BUILD_TYPES=(cards html png svg pdf logs)
 HOUSE_BUILD_ERROR=""
@@ -116,6 +114,11 @@ housebuild_validate_handoff() {
             "HouseBuild snapshots for '${HOUSE_MEMBER_ID}' are incomplete."
         return
     fi
+    if ! house_metadata_validate_schema "$HOUSE_BUILD_MANIFEST_PATH" \
+            "HouseBuild manifest for '${HOUSE_MEMBER_ID}'" 1; then
+        housebuild_reject "$HOUSE_METADATA_ERROR"
+        return
+    fi
     if ! cmp -s "$HOUSE_MEMBER_PROFILE_PATH" "$HOUSE_BUILD_PROFILE_PATH" ||
             ! cmp -s "$HOUSE_CARD_PATH" "$HOUSE_BUILD_CARD_PATH"; then
         housebuild_reject \
@@ -170,6 +173,7 @@ housebuild_write_manifest() {
     local display_name="$4"
 
     printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \

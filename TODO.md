@@ -12,6 +12,8 @@
 - Exercise `houseinit` and `housevalidate` against newly created repositories.
 - Add fixtures representing HouseMembers when that repository is available.
 - Expand installer tests for repository moves on additional Linux environments.
+- Exercise the portability suite on native Debian, Fedora, Arch, and WSL2
+  hosts as those environments become available.
 
 ### Future Features
 
@@ -20,6 +22,8 @@
 
 ### Technical Debt
 
+- Adopt the common logging interface in commands when user-selectable verbosity
+  is introduced; current output remains intentionally unchanged.
 - Move remaining duplicated workflow readiness checks into small shared helpers.
 - Benchmark startup on larger repositories before further optimization.
 

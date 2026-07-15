@@ -87,7 +87,8 @@ else
     fail "creation did not produce the complete HouseCard workspace"
 fi
 
-if grep -q '^  id: case.member$' "$CARD_DIR/card.yml" &&
+if grep -q '^schema: 1$' "$CARD_DIR/card.yml" &&
+        grep -q '^  id: case.member$' "$CARD_DIR/card.yml" &&
         grep -q '^  svg: build/svg/case.member.svg$' "$CARD_DIR/card.yml" &&
         grep -q '^  ascii: preview/ascii/case.member.txt$' \
             "$CARD_DIR/card.yml" &&
@@ -120,7 +121,8 @@ printf 'outdated readme\n' > "$CARD_DIR/README.md"
 run_command "$FIXTURE/bin/housecard" create Case.Member --force
 assert_status 0 "--force recreation succeeds"
 assert_contains "recreated" "--force reports recreation"
-if grep -q '^version: 1$' "$CARD_DIR/card.yml" &&
+if grep -q '^schema: 1$' "$CARD_DIR/card.yml" &&
+        grep -q '^version: 1$' "$CARD_DIR/card.yml" &&
         grep -q '^# HouseCard$' "$CARD_DIR/README.md" &&
         grep -q '^custom source$' "$CARD_DIR/assets/custom.svg"; then
     pass "--force refreshes owned files and preserves unrelated assets"
@@ -143,6 +145,15 @@ run_command "$FIXTURE/bin/housecard" create broken.profile
 assert_status 2 "invalid member profile returns failure status"
 assert_contains "requires id, uuid, and display_name" \
     "invalid member profile is explained"
+
+run_command "$FIXTURE/bin/housemember" add Future.Schema
+assert_status 0 "unsupported-schema fixture creation succeeds"
+sed -i 's/^schema: 1$/schema: 99/' \
+    "$FIXTURE/members/future.schema/profile.yml"
+run_command "$FIXTURE/bin/housecard" create future.schema
+assert_status 2 "unsupported member schema returns failure status"
+assert_contains "schema '99' is unsupported" \
+    "unsupported member schema is explained"
 
 run_command "$FIXTURE/bin/housemember" add Linked.Card
 assert_status 0 "symlink-safety fixture creation succeeds"

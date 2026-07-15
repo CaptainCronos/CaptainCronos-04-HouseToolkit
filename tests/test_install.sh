@@ -101,6 +101,19 @@ run_command "$INSTALL_HOME" "$REPO_ROOT/install/install.sh"
 assert_status 0 "initial installation succeeds"
 assert_output_contains 'export PATH="$HOME/.local/bin:$PATH"' \
     "installer displays the exact optional PATH line"
+assert_output_contains "$INSTALL_HOME/.config" \
+    "installer reports the HOME-based configuration directory"
+assert_output_contains "$INSTALL_HOME/.local/share" \
+    "installer reports the HOME-based data directory"
+
+if [[ -L "$INSTALL_HOME/.local/bin/.house-toolkit-paths" ]] &&
+        [[ "$(readlink -- \
+            "$INSTALL_HOME/.local/bin/.house-toolkit-paths")" == \
+            "$REPO_ROOT/lib/paths.sh" ]]; then
+    pass "installer creates the shared path bootstrap symlink"
+else
+    fail "installer did not create the shared path bootstrap symlink"
+fi
 
 for command in "${COMMANDS[@]}"; do
     link="$INSTALL_HOME/.local/bin/$command"
@@ -112,6 +125,11 @@ for command in "${COMMANDS[@]}"; do
         fail "$command does not have the correct absolute symlink"
     fi
 done
+
+run_command "$INSTALL_HOME" "$INSTALL_HOME/.local/bin/househelp" --help
+assert_status 0 "installed commands execute through symlinks"
+assert_output_contains "Available Commands" \
+    "installed command resolves repository-relative libraries"
 
 run_command "$INSTALL_HOME" "$REPO_ROOT/install/install.sh"
 assert_status 0 "repeat installation succeeds"
@@ -146,7 +164,9 @@ fi
 
 run_command "$INSTALL_HOME" "$REPO_ROOT/install/uninstall.sh"
 assert_status 0 "uninstall succeeds"
-if [[ -d "$INSTALL_HOME/.local/bin" && ! -e "$INSTALL_HOME/.local/bin/househelp" ]]; then
+if [[ -d "$INSTALL_HOME/.local/bin" &&
+        ! -e "$INSTALL_HOME/.local/bin/househelp" &&
+        ! -e "$INSTALL_HOME/.local/bin/.house-toolkit-paths" ]]; then
     pass "uninstall removes links and preserves ~/.local/bin"
 else
     fail "uninstall did not remove links while preserving ~/.local/bin"

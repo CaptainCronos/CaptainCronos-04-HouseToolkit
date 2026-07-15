@@ -11,6 +11,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$SCRIPT_DIR/../lib/paths.sh"
 # shellcheck source=../lib/commands.sh
 source "$SCRIPT_DIR/../lib/commands.sh"
+# shellcheck source=../lib/exit_codes.sh
+source "$SCRIPT_DIR/../lib/exit_codes.sh"
 
 FAIL_COUNT=0
 CHECK_ONLY=0
@@ -20,7 +22,7 @@ usage() {
     cat <<'EOF'
 Usage: install/install.sh [--check | --repair]
 
-Install HouseToolkit command symlinks in ~/.local/bin.
+Install HouseToolkit command symlinks in HOME/.local/bin.
 
 Options:
   --check  Validate the installation without making changes.
@@ -49,17 +51,17 @@ parse_arguments() {
         --repair) REPAIR=1 ;;
         -h|--help)
             usage
-            exit 0
+            exit "$HOUSE_EXIT_SUCCESS"
             ;;
         *)
             usage >&2
-            exit 2
+            exit "$HOUSE_EXIT_ERROR"
             ;;
     esac
 
     if (( $# > 1 )); then
         usage >&2
-        exit 2
+        exit "$HOUSE_EXIT_ERROR"
     fi
 }
 
@@ -98,6 +100,22 @@ preflight_destinations() {
 
     [[ -d "$BIN_DIR" ]] || return 0
 
+    destination="$BIN_DIR/$BOOTSTRAP_NAME"
+    target="$REPO_ROOT/lib/paths.sh"
+    if [[ -L "$destination" ]]; then
+        existing_target="$(readlink -- "$destination")"
+        if [[ "$existing_target" != "$target" ]] && ! {
+                (( REPAIR == 1 )) && [[ ! -e "$destination" ]] &&
+                [[ "$existing_target" == */lib/paths.sh ]];
+            }; then
+            report FAIL "Collision: path bootstrap" \
+                "existing symlink left untouched"
+        fi
+    elif [[ -e "$destination" ]]; then
+        report FAIL "Collision: path bootstrap" \
+            "existing file left untouched"
+    fi
+
     for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
         target="$REPO_ROOT/bin/$command"
@@ -128,6 +146,20 @@ install_links() {
         report INFO "User command directory" "$BIN_DIR"
     fi
 
+    destination="$BIN_DIR/$BOOTSTRAP_NAME"
+    target="$REPO_ROOT/lib/paths.sh"
+    if [[ -L "$destination" ]]; then
+        if [[ "$(readlink -- "$destination")" == "$target" ]]; then
+            report INFO "Path bootstrap" "already installed"
+        else
+            ln -sfn -- "$target" "$destination"
+            report PASS "Path bootstrap" "repaired"
+        fi
+    else
+        ln -s -- "$target" "$destination"
+        report PASS "Path bootstrap" "created"
+    fi
+
     for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
         target="$REPO_ROOT/bin/$command"
@@ -150,6 +182,16 @@ verify_links() {
     local command
     local destination
     local target
+
+    destination="$BIN_DIR/$BOOTSTRAP_NAME"
+    target="$REPO_ROOT/lib/paths.sh"
+    if [[ ! -L "$destination" ]]; then
+        report FAIL "Verify: path bootstrap" "expected symlink is missing"
+    elif [[ "$(readlink -- "$destination")" != "$target" ]]; then
+        report FAIL "Verify: path bootstrap" "does not target $target"
+    else
+        report PASS "Verify: path bootstrap" "$target"
+    fi
 
     for command in "${HOUSE_COMMANDS[@]}"; do
         destination="$BIN_DIR/$command"
@@ -190,9 +232,14 @@ verify_commands() {
 parse_arguments "$@"
 
 REPO_ROOT="$(house_find_repo_root)"
-BIN_DIR="$HOME/.local/bin"
+BIN_DIR="$(house_user_bin_dir)"
+CONFIG_HOME="$(house_config_home)"
+DATA_HOME="$(house_data_home)"
+BOOTSTRAP_NAME=".house-toolkit-paths"
 
 report INFO "Repository" "$REPO_ROOT"
+report INFO "Configuration home" "$CONFIG_HOME"
+report INFO "Data home" "$DATA_HOME"
 validate_sources
 preflight_destinations
 
@@ -210,7 +257,7 @@ check_path
 
 if (( FAIL_COUNT > 0 )); then
     report FAIL "Installation" "$FAIL_COUNT validation failure(s)"
-    exit 1
+    exit "$HOUSE_EXIT_WARNING"
 fi
 
 if (( CHECK_ONLY == 1 )); then

@@ -72,6 +72,10 @@ VALID_REPO="$(new_repo valid)"
 run_command "$REPO_ROOT/bin/housevalidate" "$VALID_REPO"
 assert_status 0 "a complete standard repository passes"
 assert_contains "standard (marker: .house-standard)" "standard marker selects the profile"
+assert_contains "Environment" "validation reports the environment section"
+assert_contains "Command: sha256sum" \
+    "validation checks required portability commands"
+assert_contains "Installation" "validation reports installation paths"
 
 GENERIC_REPO="$TEST_WORK_DIR/generic"
 mkdir -p -- "$GENERIC_REPO"
@@ -100,6 +104,13 @@ printf 'profile: unknown\n' > "$MALFORMED_REPO/.house-standard"
 run_command "$REPO_ROOT/bin/housevalidate" "$MALFORMED_REPO"
 assert_status 2 "malformed repository metadata fails"
 assert_contains ".house-standard schema" "metadata schema failure is reported"
+
+SCHEMA_REPO="$(new_repo unsupported-schema)"
+sed -i 's/^schema: 1$/schema: 99/' "$SCHEMA_REPO/.house-standard"
+run_command "$REPO_ROOT/bin/housevalidate" "$SCHEMA_REPO"
+assert_status 2 "unsupported repository schema fails"
+assert_contains "expected schema 1" \
+    "unsupported repository schema reports the supported revision"
 
 VERSION_REPO="$(new_repo version-mismatch)"
 sed -i 's/Version: 1.2.3/Version: 9.9.9/' "$VERSION_REPO/README.md"

@@ -96,7 +96,8 @@ else
     fail "HousePreview workspace is incomplete"
 fi
 
-if cmp -s "$FIXTURE/build/cards/preview.member/build.yml" \
+if grep -q '^schema: 1$' "$MEMBER_PREVIEW_DIR/preview.yml" &&
+        cmp -s "$FIXTURE/build/cards/preview.member/build.yml" \
         "$MEMBER_PREVIEW_DIR/build.yml" &&
         grep -q '^  id: preview.member$' \
             "$MEMBER_PREVIEW_DIR/preview.yml" &&
@@ -138,7 +139,8 @@ printf 'outdated build snapshot\n' > "$MEMBER_PREVIEW_DIR/build.yml"
 run_command "$FIXTURE/bin/housepreview" preview.member --force
 assert_status 0 "--force preview recreation succeeds"
 assert_contains "recreated" "--force reports preview recreation"
-if grep -q '^version: 1$' "$MEMBER_PREVIEW_DIR/preview.yml" &&
+if grep -q '^schema: 1$' "$MEMBER_PREVIEW_DIR/preview.yml" &&
+        grep -q '^version: 1$' "$MEMBER_PREVIEW_DIR/preview.yml" &&
         cmp -s "$FIXTURE/build/cards/preview.member/build.yml" \
             "$MEMBER_PREVIEW_DIR/build.yml" &&
         grep -q '^custom preview metadata$' \

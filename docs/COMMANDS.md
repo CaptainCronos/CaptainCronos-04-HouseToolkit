@@ -6,10 +6,11 @@ Every command accepts `-h` and `--help`. Workflow commands also accept the
 `help` subcommand. Help exits `0`; invalid commands and argument counts print
 usage to standard error and exit `2`.
 
-Commands resolve the repository containing their real executable path, so
-installed symlinks work from any current directory. `houseinit` requires an
-explicit repository path. `houseindex`, `housestats`, and `housevalidate`
-accept an optional explicit repository path.
+Commands resolve the repository containing their physical executable path
+through shared path helpers, so installed symlinks work from any current
+directory without GNU `readlink -f`. `houseinit` requires an explicit
+repository path. `houseindex`, `housestats`, and `housevalidate` accept an
+optional explicit repository path.
 
 ## Front Page and Repository Commands
 
@@ -64,10 +65,17 @@ standard profile. Shared integrity rules validate metadata, versions,
 documentation targets, executable bits, symlinks, manifests, generated
 indexes, and Git state. Results are `PASS`, `WARN`, `FAIL`, or `INFO`.
 
+The Environment section reports distribution, version, support tier, kernel,
+architecture, shell, Git, Bash, and the availability of Bash, Git, `awk`,
+`sed`, `grep`, `find`, `tar`, `gzip`, `sha256sum`, and path resolution. The
+Installation section validates `$HOME/.local/bin`, `PATH`, the shared bootstrap
+link, command symlinks, and executable permissions. It also reports resolved
+XDG configuration and data homes.
+
 Validation exit codes are:
 
 - `0`: validation passed
-- `1`: validation completed with warnings
+- `1`: validation completed with warnings or a safe operation was refused
 - `2`: validation failed or command usage was invalid
 
 ## Member and HouseCard Commands

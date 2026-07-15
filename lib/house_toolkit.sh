@@ -17,10 +17,12 @@ HOUSE_TOOLKIT_LOADED=1
 # Toolkit Paths
 #------------------------------------------------------------------------------
 
-HOUSE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=paths.sh
-source "${HOUSE_LIB_DIR}/paths.sh"
+[[ -n "${HOUSE_PATHS_LOADED:-}" ]] || source "$(dirname -- \
+    "${BASH_SOURCE[0]}")/paths.sh"
+
+# shellcheck source=logging.sh
+source "${HOUSE_LIB_DIR}/logging.sh"
 
 HOUSE_ROOT="$(house_find_repo_root)"
 

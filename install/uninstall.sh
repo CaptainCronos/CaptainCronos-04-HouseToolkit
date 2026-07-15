@@ -11,6 +11,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$SCRIPT_DIR/../lib/paths.sh"
 # shellcheck source=../lib/commands.sh
 source "$SCRIPT_DIR/../lib/commands.sh"
+# shellcheck source=../lib/exit_codes.sh
+source "$SCRIPT_DIR/../lib/exit_codes.sh"
 
 FAIL_COUNT=0
 CHECK_ONLY=0
@@ -19,7 +21,7 @@ usage() {
     cat <<'EOF'
 Usage: install/uninstall.sh [--check]
 
-Remove HouseToolkit command symlinks from ~/.local/bin.
+Remove HouseToolkit command symlinks from HOME/.local/bin.
 
 Options:
   --check  Validate what may be removed without making changes.
@@ -45,21 +47,22 @@ case "${1:-}" in
     --check) CHECK_ONLY=1 ;;
     -h|--help)
         usage
-        exit 0
+        exit "$HOUSE_EXIT_SUCCESS"
         ;;
     *)
         usage >&2
-        exit 2
+        exit "$HOUSE_EXIT_ERROR"
         ;;
 esac
 
 if (( $# > 1 )); then
     usage >&2
-    exit 2
+    exit "$HOUSE_EXIT_ERROR"
 fi
 
 REPO_ROOT="$(house_find_repo_root)"
-BIN_DIR="$HOME/.local/bin"
+BIN_DIR="$(house_user_bin_dir)"
+BOOTSTRAP_NAME=".house-toolkit-paths"
 
 report INFO "Repository" "$REPO_ROOT"
 (( CHECK_ONLY == 0 )) || report INFO "Mode" "check only; no changes made"
@@ -86,6 +89,25 @@ for command in "${HOUSE_COMMANDS[@]}"; do
     fi
 done
 
+destination="$BIN_DIR/$BOOTSTRAP_NAME"
+target="$REPO_ROOT/lib/paths.sh"
+if [[ -L "$destination" ]]; then
+    if [[ "$(readlink -- "$destination")" == "$target" ]]; then
+        if (( CHECK_ONLY == 1 )); then
+            report PASS "Path bootstrap" "belongs to this repository"
+        else
+            rm -- "$destination"
+            report PASS "Path bootstrap" "removed"
+        fi
+    else
+        report WARN "Path bootstrap" "unrelated symlink left untouched"
+    fi
+elif [[ -e "$destination" ]]; then
+    report WARN "Path bootstrap" "regular file left untouched"
+else
+    report INFO "Path bootstrap" "not installed"
+fi
+
 if [[ -d "$BIN_DIR" ]]; then
     report PASS "User command directory" "preserved $BIN_DIR"
 else
@@ -94,7 +116,7 @@ fi
 
 if (( FAIL_COUNT > 0 )); then
     report FAIL "Uninstall" "$FAIL_COUNT failure(s)"
-    exit 1
+    exit "$HOUSE_EXIT_WARNING"
 fi
 
 if (( CHECK_ONLY == 1 )); then

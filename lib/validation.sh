@@ -10,17 +10,23 @@
 [[ -n "${HOUSE_VALIDATION_LOADED:-}" ]] && return
 HOUSE_VALIDATION_LOADED=1
 
-HOUSE_VALIDATION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=paths.sh
-source "${HOUSE_VALIDATION_DIR}/paths.sh"
+[[ -n "${HOUSE_PATHS_LOADED:-}" ]] || source "$(dirname -- \
+    "${BASH_SOURCE[0]}")/paths.sh"
+
+# shellcheck source=environment.sh
+source "${HOUSE_LIB_DIR}/environment.sh"
+# shellcheck source=metadata.sh
+source "${HOUSE_LIB_DIR}/metadata.sh"
+# shellcheck source=commands.sh
+source "${HOUSE_LIB_DIR}/commands.sh"
 
 # shellcheck source=validators/toolkit.sh
-source "${HOUSE_VALIDATION_DIR}/validators/toolkit.sh"
+source "${HOUSE_LIB_DIR}/validators/toolkit.sh"
 # shellcheck source=validators/house.sh
-source "${HOUSE_VALIDATION_DIR}/validators/house.sh"
+source "${HOUSE_LIB_DIR}/validators/house.sh"
 # shellcheck source=validators/standard.sh
-source "${HOUSE_VALIDATION_DIR}/validators/standard.sh"
+source "${HOUSE_LIB_DIR}/validators/standard.sh"
 
 house_validation_reset() {
     HOUSE_PASS_COUNT=0
@@ -196,6 +202,138 @@ house_validate_standard_marker() {
     fi
 }
 
+house_validate_profile_marker() {
+    local root="$1"
+    local profile="$2"
+    local marker="$root/.house-$profile"
+    local schema
+    local declared_profile
+
+    [[ "$profile" != "standard" ]] || {
+        house_validate_standard_marker "$root"
+        return
+    }
+    [[ -e "$marker" ]] || return 0
+    if [[ ! -f "$marker" ]]; then
+        house_validation_result FAIL ".house-$profile" \
+            "marker is not a regular file"
+        return
+    fi
+
+    schema="$(awk '$1 == "schema:" { print $2; exit }' "$marker")"
+    declared_profile="$(awk '$1 == "profile:" { print $2; exit }' "$marker")"
+    if [[ -z "$schema" && -z "$declared_profile" ]]; then
+        house_validation_result INFO ".house-$profile schema" \
+            "legacy marker accepted as schema 1"
+        return
+    fi
+    if [[ "$schema" == "$HOUSE_METADATA_SCHEMA_SUPPORTED" &&
+            "$declared_profile" == "$profile" ]]; then
+        house_validation_result PASS ".house-$profile schema" \
+            "schema $schema supported"
+    else
+        house_validation_result FAIL ".house-$profile schema" \
+            "expected schema 1 and profile $profile"
+    fi
+}
+
+house_validate_environment() {
+    local command
+    local command_path
+
+    house_section "Environment"
+    house_validation_result INFO "Distribution" "$HOUSE_ENV_DISTRIBUTION"
+    house_validation_result INFO "Distribution version" "$HOUSE_ENV_VERSION"
+    house_validation_result INFO "Support tier" "$HOUSE_ENV_PLATFORM_TIER"
+    house_validation_result INFO "Kernel" "$HOUSE_ENV_KERNEL"
+    house_validation_result INFO "Architecture" "$HOUSE_ENV_ARCHITECTURE"
+    house_validation_result INFO "Shell" "$HOUSE_ENV_SHELL"
+    house_validation_result INFO "Git version" "$HOUSE_ENV_GIT_VERSION"
+    house_validation_result INFO "Bash version" "$HOUSE_ENV_BASH_VERSION"
+
+    for command in "${HOUSE_REQUIRED_COMMANDS[@]}"; do
+        if command_path="$(house_environment_command_version "$command")"; then
+            house_validation_result PASS "Command: $command" "$command_path"
+        else
+            house_validation_result FAIL "Command: $command" "not found in PATH"
+        fi
+    done
+    case "$HOUSE_ENV_REALPATH_MODE" in
+        realpath)
+            house_validation_result PASS "Command: realpath" \
+                "$(house_executable_path realpath)"
+            ;;
+        "readlink fallback")
+            house_validation_result PASS "Path resolution" \
+                "realpath unavailable; supported readlink fallback active"
+            ;;
+        *)
+            house_validation_result FAIL "Path resolution" \
+                "realpath and readlink are unavailable"
+            ;;
+    esac
+}
+
+house_validate_installation() {
+    local bin_dir
+    local bootstrap
+    local command
+    local destination
+    local expected
+    local installed=0
+    local invalid=0
+
+    house_section "Installation"
+    if ! bin_dir="$(house_user_bin_dir)"; then
+        house_validation_result FAIL "User command directory" \
+            "$HOUSE_PATH_ERROR"
+        return
+    fi
+    house_validation_result INFO "Configuration home" "$(house_config_home)"
+    house_validation_result INFO "Data home" "$(house_data_home)"
+
+    if [[ -d "$bin_dir" ]]; then
+        house_validation_result PASS "User command directory" "$bin_dir"
+    else
+        house_validation_result WARN "User command directory" \
+            "$bin_dir does not exist"
+    fi
+    if house_path_contains "$bin_dir"; then
+        house_validation_result PASS "PATH" "$bin_dir"
+    else
+        house_validation_result WARN "PATH" "$bin_dir is not present"
+    fi
+
+    bootstrap="$bin_dir/.house-toolkit-paths"
+    expected="$HOUSE_ROOT/lib/paths.sh"
+    if [[ -L "$bootstrap" ]] &&
+            [[ "$(house_path_resolve "$bootstrap")" == "$expected" ]]; then
+        house_validation_result PASS "Installed path bootstrap" "$expected"
+    else
+        house_validation_result WARN "Installed path bootstrap" \
+            "missing or not linked to this repository"
+    fi
+
+    for command in "${HOUSE_COMMANDS[@]}"; do
+        destination="$bin_dir/$command"
+        expected="$HOUSE_ROOT/bin/$command"
+        if [[ -L "$destination" ]] &&
+                [[ "$(house_path_resolve "$destination")" == "$expected" ]] &&
+                [[ -x "$destination" ]]; then
+            ((installed += 1))
+        else
+            ((invalid += 1))
+        fi
+    done
+    if (( invalid == 0 )); then
+        house_validation_result PASS "Command symlinks" \
+            "$installed installed and executable"
+    else
+        house_validation_result WARN "Command symlinks" \
+            "$invalid missing, stale, or non-executable"
+    fi
+}
+
 house_validate_version_consistency() {
     local root="$1"
     local version
@@ -355,7 +493,7 @@ house_validate_common() {
     local root="$1"
 
     house_section "Repository Metadata"
-    house_validate_standard_marker "$root"
+    house_validate_profile_marker "$root" "$HOUSE_REPOSITORY_PROFILE"
     house_validate_version_consistency "$root"
 
     house_section "Repository Integrity"

@@ -32,6 +32,12 @@ modifying any other repository content.
 Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
 
 - `paths.sh` resolves repository and workspace paths.
+- `environment.sh` detects the Linux distribution, release, kernel,
+  architecture, shell, and required command environment.
+- `metadata.sh` validates supported schema revisions for repository and
+  generated workflow metadata.
+- `logging.sh` defines reusable DEBUG, INFO, WARN, ERROR, and QUIET levels.
+- `exit_codes.sh` defines the public process-status contract.
 - `cli.sh` provides help detection, argument-count checks, usage errors, and
   installed-command startup validation.
 - `commands.sh` is the single installer command inventory.
@@ -44,32 +50,42 @@ Executable entry points live in `bin/`. Reusable behavior lives in `lib/`:
 - `validation.sh` detects repository profiles, dispatches profile validators,
   records result counts, and maps summaries to exit codes.
 - `validators/` contains the Toolkit and House structural validators.
-- Common validation checks metadata, versions, local documentation targets,
-  executable modes, symlinks, JSON manifests, index freshness, and Git state.
+- Common validation checks environment dependencies, installation paths,
+  metadata, versions, local documentation targets, executable modes, symlinks,
+  JSON manifests, index freshness, and Git state.
 - Workflow-specific libraries implement HouseCard, HouseBuild, HousePreview,
   HouseRelease, and HousePublish behavior.
 
 ## Repository Path Resolution
 
-`lib/paths.sh` is the canonical source for repository filesystem locations. It
-resolves command symlinks and walks upward from the real executable path until
-it finds `.house-toolkit` or `.house-repository`.
+`lib/paths.sh` is the canonical source for executable, repository, HOME, XDG,
+installation, and workflow filesystem locations. It resolves command symlinks
+and walks upward from the physical executable path until it finds a repository
+profile marker. It uses `realpath` when present and a bounded `readlink`
+fallback otherwise.
 
 Commands therefore operate on the repository containing their executable,
 independently of the caller's current working directory. `houseindex`,
 `housestats`, and `housevalidate` may instead receive an explicit repository
 path.
 
+`XDG_CONFIG_HOME` and `XDG_DATA_HOME` are honored only when absolute, as
+required by the XDG Base Directory specification. They otherwise fall back to
+`$HOME/.config` and `$HOME/.local/share`. Executables use `$HOME/.local/bin`;
+all executable lookup goes through `PATH`.
+
 ## User Installation
 
-`install/install.sh` creates absolute symlinks in `~/.local/bin` for the eleven
-executables in `bin/`. It does not copy source files, write system directories,
-or edit shell configuration. Existing regular files and nonmatching symlinks
-are collisions and are preserved.
+`install/install.sh` creates absolute symlinks in `$HOME/.local/bin` for the
+eleven executables in `bin/`. A managed `.house-toolkit-paths` symlink exposes
+the shared path library during installed-command bootstrap, avoiding GNU
+`readlink -f` assumptions. The installer does not copy source files, write
+system directories, or edit shell configuration. Existing regular files and
+nonmatching symlinks are collisions and are preserved.
 
 `install/uninstall.sh` removes a link only when its name and exact target match
 the corresponding executable in the current repository. Both scripts provide
-a read-only `--check` mode and preserve `~/.local/bin` itself.
+a read-only `--check` mode and preserve `$HOME/.local/bin` itself.
 
 `install/install.sh --repair` replaces only broken links whose target has the
 expected `bin/<command>` suffix. Live links owned by another repository remain
@@ -84,6 +100,28 @@ operate on the repository containing their executable. Output flows through
 shared banner, section, key/value, and validation-result helpers. Commands map
 success to `0`, warnings to `1`, and validation or usage failures to `2` where
 documented.
+
+The shared exit-code meanings are `0` for success, `1` for a warning or safe
+non-destructive refusal, and `2` for invalid usage or failed validation. The
+logging interface is framework-only in this milestone; existing command output
+does not change.
+
+## Linux Portability Contract
+
+Tier 1 covers Ubuntu LTS/current, Linux Mint, Kubuntu, Xubuntu, Lubuntu,
+Ubuntu MATE, Ubuntu Budgie, Pop!_OS, and Ubuntu under WSL2. Debian Stable is
+Tier 2. Fedora and Arch are Tier 3 best effort. The toolkit is Linux-only;
+native Windows, PowerShell, CMD, and macOS are outside the architecture.
+
+The required runtime command set is Bash, Git, `awk`, `sed`, `grep`, `find`,
+`tar`, `gzip`, and `sha256sum`, plus either `realpath` or the supported
+`readlink` fallback. `housevalidate` reports the detected environment and each
+dependency independently.
+
+Repository markers and newly generated member, HouseCard, Build, Preview, and
+Release YAML include schema revision `1`. Readers accept legacy version-1
+metadata without an explicit schema but reject explicit unsupported revisions,
+allowing future migrations to fail safely.
 
 ## Performance Boundaries
 

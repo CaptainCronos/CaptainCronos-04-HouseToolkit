@@ -86,7 +86,8 @@ else
     fail "HouseBuild workspace is incomplete"
 fi
 
-if cmp -s "$FIXTURE/members/builder.member/profile.yml" \
+if grep -q '^schema: 1$' "$MEMBER_BUILD_DIR/build.yml" &&
+        cmp -s "$FIXTURE/members/builder.member/profile.yml" \
         "$MEMBER_BUILD_DIR/profile.yml" &&
         cmp -s "$FIXTURE/members/builder.member/card/card.yml" \
             "$MEMBER_BUILD_DIR/card.yml" &&
@@ -126,7 +127,8 @@ printf 'outdated snapshot\n' > "$MEMBER_BUILD_DIR/card.yml"
 run_command "$FIXTURE/bin/housebuild" builder.member --force
 assert_status 0 "--force rebuild succeeds"
 assert_contains "rebuilt" "--force reports the rebuild"
-if grep -q '^version: 1$' "$MEMBER_BUILD_DIR/build.yml" &&
+if grep -q '^schema: 1$' "$MEMBER_BUILD_DIR/build.yml" &&
+        grep -q '^version: 1$' "$MEMBER_BUILD_DIR/build.yml" &&
         cmp -s "$FIXTURE/members/builder.member/card/card.yml" \
             "$MEMBER_BUILD_DIR/card.yml" &&
         grep -q '^custom member file$' "$MEMBER_BUILD_DIR/custom.txt" &&

@@ -6,10 +6,8 @@
 [[ -n "${HOUSE_RELEASE_LOADED:-}" ]] && return
 HOUSE_RELEASE_LOADED=1
 
-HOUSE_RELEASE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=housepreview.sh
-source "${HOUSE_RELEASE_LIB_DIR}/housepreview.sh"
+source "${HOUSE_LIB_DIR}/housepreview.sh"
 
 HOUSE_RELEASE_FORMATS=(pdf png jpg zip)
 HOUSE_RELEASE_ERROR=""
@@ -52,6 +50,7 @@ houserelease_write_package_manifest() {
     local member_id="$2"
 
     printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \
@@ -75,6 +74,7 @@ houserelease_write_manifest() {
     local display_name="$4"
 
     printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \
@@ -274,6 +274,16 @@ houserelease_validate_handoff() {
             "$HOUSE_RELEASE_PREVIEW_PATH"; then
         houserelease_reject \
             "HouseRelease preview snapshot for '${HOUSE_MEMBER_ID}' is stale."
+        return
+    fi
+    if ! house_metadata_validate_schema "$HOUSE_RELEASE_MANIFEST_PATH" \
+            "HouseRelease manifest for '${HOUSE_MEMBER_ID}'" 1; then
+        houserelease_reject "$HOUSE_METADATA_ERROR"
+        return
+    fi
+    if ! house_metadata_validate_schema "$HOUSE_RELEASE_PACKAGE_PATH" \
+            "HouseRelease package manifest for '${HOUSE_MEMBER_ID}'" 1; then
+        houserelease_reject "$HOUSE_METADATA_ERROR"
         return
     fi
 

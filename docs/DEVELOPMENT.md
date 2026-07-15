@@ -20,6 +20,7 @@ bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
 bash tests/test_houserelease.sh
+bash tests/test_portability.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -47,10 +48,14 @@ release metadata, checksums, version and notes placeholders, predictable
 directories, duplicate and force behavior, non-packaging boundaries, cleanup,
 symlink safety, and preservation of user files and packages.
 
+`tests/test_portability.sh` verifies HOME and XDG fallbacks, repository and
+executable discovery, non-`realpath` symlink resolution, environment fields,
+required commands, logging levels, exit-code constants, and schema rejection.
+
 `tests/test_install.sh` uses temporary `HOME` directories. It verifies install,
 check, repair, repeat install, uninstall, collision safety, command execution
 through installed links, Bash syntax, and whitespace checks. It never modifies
-the developer's real `~/.local/bin`.
+the developer's real `$HOME/.local/bin`.
 
 `tests/test_validation.sh` builds disposable Git repositories for every shared
 validation rule. It covers standard initialization, markerless detection,
@@ -64,7 +69,7 @@ build, preview, release, and publish readiness as one end-to-end lifecycle.
 ## Adding a Command
 
 1. Add an executable `bin/<command>` entry point with strict Bash options.
-2. Resolve its directory through `readlink -f`, then source `paths.sh` and
+2. Use the standard entry-point bootstrap to load `paths.sh`, then source
    `cli.sh`; load only the command libraries it needs.
 3. Provide `-h` and `--help`, use shared argument-count handling, and reserve
    status `2` for invalid usage or failed validation.
@@ -79,6 +84,10 @@ build, preview, release, and publish readiness as one end-to-end lifecycle.
 - Quote paths, use `--` before path operands, and prefer null-delimited Git or
   filesystem output where filenames are processed.
 - Keep command parsing in entry points and reusable behavior in `lib/`.
+- Route repository, executable, HOME, XDG, installation, and workspace paths
+  through `lib/paths.sh`; do not add `readlink -f` or current-directory logic.
+- Use `lib/environment.sh`, `lib/metadata.sh`, `lib/logging.sh`, and
+  `lib/exit_codes.sh` instead of introducing command-local equivalents.
 - Preserve documented files unless the command explicitly owns their lifecycle.
 - Use shared output helpers and the `PASS`, `WARN`, `FAIL`, `INFO` vocabulary.
 - Optimize only after measuring duplicated work.
@@ -136,6 +145,7 @@ bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
 bash tests/test_houserelease.sh
+bash tests/test_portability.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh
@@ -152,6 +162,7 @@ local/remote branch relationship before preparing a release candidate.
 ## Change Boundaries
 
 - Preserve the staged workflow and shared path abstraction.
+- Preserve Linux-only support and the documented distribution tiers.
 - Keep cleanup commands confined to their documented workspaces.
 - Preserve user-authored and unrelated files.
 - Keep generated artifacts out of Git except for workspace placeholders.

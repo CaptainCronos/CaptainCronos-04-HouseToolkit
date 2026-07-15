@@ -43,6 +43,14 @@
 - Added explicit release recreation, generated-file cleanup, checksum and
   manifest validation, symlink protection, and preservation of user packages
   and unrelated release files without implementing packaging or publishing.
+- Centralized repository, executable, workspace, HOME, PATH, and XDG path
+  handling with a portable `realpath`/`readlink` resolution strategy and an
+  installed-command bootstrap symlink.
+- Added Linux distribution and environment detection, required-command and
+  installation validation, schema-version enforcement, shared logging levels,
+  and named exit-code constants without changing workflow behavior.
+- Documented Linux support tiers for Ubuntu-family, Debian, Fedora, Arch, and
+  WSL2 targets and added dedicated portability and installer regressions.
 
 ## 1.0.0-rc1 "Cerberus" — 2026-07-15
 

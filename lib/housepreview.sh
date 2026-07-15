@@ -6,10 +6,8 @@
 [[ -n "${HOUSE_PREVIEW_LOADED:-}" ]] && return
 HOUSE_PREVIEW_LOADED=1
 
-HOUSE_PREVIEW_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=housebuild.sh
-source "${HOUSE_PREVIEW_LIB_DIR}/housebuild.sh"
+source "${HOUSE_LIB_DIR}/housebuild.sh"
 
 HOUSE_PREVIEW_TYPES=(ascii html png)
 HOUSE_PREVIEW_ERROR=""
@@ -126,6 +124,11 @@ housepreview_validate_output() {
             "HousePreview README for '${HOUSE_MEMBER_ID}' is missing."
         return
     fi
+    if ! house_metadata_validate_schema "$HOUSE_PREVIEW_MANIFEST_PATH" \
+            "HousePreview manifest for '${HOUSE_MEMBER_ID}'" 1; then
+        housepreview_reject "$HOUSE_METADATA_ERROR"
+        return
+    fi
     preview_version="$(awk '$1 == "version:" { print $2; exit }' \
         "$HOUSE_PREVIEW_MANIFEST_PATH")"
     if [[ "$preview_version" != "1" ]]; then
@@ -186,6 +189,7 @@ housepreview_write_manifest() {
     local display_name="$4"
 
     printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \

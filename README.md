@@ -16,7 +16,7 @@ workspace.
 
 ## Major Features
 
-- Per-user installation into `~/.local/bin` without `sudo`
+- Per-user installation into `$HOME/.local/bin` without `sudo`
 - Toolkit, House, and standard repository profile detection
 - Idempotent standard repository initialization
 - Deterministic repository statistics and asset indexing
@@ -26,13 +26,25 @@ workspace.
 - Release-ready HousePreview manifests with safe recreation and cleanup
 - Checksummed HouseRelease metadata and deterministic HousePublish handoffs
 - Release and publish workspace inspection
-- Shared CLI parsing, exit-code conventions, and path resolution
+- Centralized Linux environment, executable, HOME/XDG, and path resolution
+- Shared logging, schema-version, and exit-code contracts
 - Dependency-free Bash regression suites for commands and lifecycle workflows
 
 ## Installation
 
-HouseToolkit targets Bash on GNU/Linux and requires Git and standard GNU
-command-line utilities. `housemember add` also requires `uuidgen`.
+HouseToolkit is Linux-only. Tier 1 support covers Ubuntu LTS and current,
+Linux Mint, Kubuntu, Xubuntu, Lubuntu, Ubuntu MATE, Ubuntu Budgie, Pop!_OS,
+and Ubuntu under WSL2. Debian Stable is Tier 2. Fedora and Arch are Tier 3
+best-effort targets. Native Windows, PowerShell, CMD, and macOS are unsupported.
+
+Required commands are Bash, Git, `awk`, `sed`, `grep`, `find`, `tar`, `gzip`,
+and `sha256sum`. Path resolution uses `realpath` when available and a supported
+`readlink` fallback otherwise. `housemember add` also requires `uuidgen`.
+
+HouseToolkit respects `HOME`, `PATH`, `XDG_CONFIG_HOME`, and `XDG_DATA_HOME`.
+Relative or unset XDG paths safely fall back to `$HOME/.config` and
+`$HOME/.local/share`. User commands remain in `$HOME/.local/bin`, following
+the established Linux executable convention.
 
 Install command symlinks for the current user:
 
@@ -40,10 +52,10 @@ Install command symlinks for the current user:
 ./install/install.sh
 ```
 
-The installer links all eleven commands into `~/.local/bin`; it does not copy the
-repository, use system directories, or edit shell configuration. If the user
-command directory is not on `PATH`, the installer prints the optional line to
-add to `~/.bashrc`.
+The installer links all eleven commands and a shared path-bootstrap link into
+`$HOME/.local/bin`; it does not copy the repository, use system directories,
+or edit shell configuration. If the user command directory is not on `PATH`,
+the installer prints the optional line to add to the user's Bash startup file.
 
 Validate or remove the installation with:
 
@@ -143,6 +155,7 @@ bash tests/test_housecard.sh
 bash tests/test_housebuild.sh
 bash tests/test_housepreview.sh
 bash tests/test_houserelease.sh
+bash tests/test_portability.sh
 bash tests/test_install.sh
 bash tests/test_validation.sh
 bash tests/test_workflows.sh

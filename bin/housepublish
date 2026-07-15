@@ -9,10 +9,19 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+HOUSE_ENTRY_DIR="${BASH_SOURCE[0]%/*}"
+[[ "$HOUSE_ENTRY_DIR" != "${BASH_SOURCE[0]}" ]] || HOUSE_ENTRY_DIR="."
+if [[ -r "$HOUSE_ENTRY_DIR/../lib/paths.sh" ]]; then
+    source "$HOUSE_ENTRY_DIR/../lib/paths.sh"
+elif [[ -r "$HOUSE_ENTRY_DIR/.house-toolkit-paths" ]]; then
+    source "$HOUSE_ENTRY_DIR/.house-toolkit-paths"
+else
+    printf 'Unable to locate HouseToolkit path helpers.\n' >&2
+    exit 2
+fi
+SCRIPT_DIR="$(house_path_dir "${BASH_SOURCE[0]}")"
 
-# shellcheck source=../lib/paths.sh
-source "${SCRIPT_DIR}/../lib/paths.sh"
+# Path helpers are loaded by the portable bootstrap above.
 # shellcheck source=../lib/cli.sh
 source "${SCRIPT_DIR}/../lib/cli.sh"
 

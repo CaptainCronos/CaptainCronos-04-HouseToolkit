@@ -7,21 +7,21 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/houserelease-pipeline` |
-| Commit | `d54ec70` |
+| Branch | `feature/portability-hardening` |
+| Commit | `78770d2` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 67 |
+| Repository files | 72 |
 | Directories represented | 26 |
 | Markdown | 9 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 58 |
+| Other files | 63 |
 
 ## Files by Top-Level Directory
 
@@ -77,6 +77,8 @@
 
 - `lib/cli.sh`
 - `lib/commands.sh`
+- `lib/environment.sh`
+- `lib/exit_codes.sh`
 - `lib/house_toolkit.sh`
 - `lib/housebuild.sh`
 - `lib/housecard.sh`
@@ -84,6 +86,8 @@
 - `lib/housepreview.sh`
 - `lib/housepublish.sh`
 - `lib/houserelease.sh`
+- `lib/logging.sh`
+- `lib/metadata.sh`
 - `lib/paths.sh`
 - `lib/validation.sh`
 - `lib/validators/house.sh`
@@ -119,5 +123,6 @@
 - `tests/test_housepreview.sh`
 - `tests/test_houserelease.sh`
 - `tests/test_install.sh`
+- `tests/test_portability.sh`
 - `tests/test_validation.sh`
 - `tests/test_workflows.sh`

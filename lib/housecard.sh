@@ -6,10 +6,8 @@
 [[ -n "${HOUSE_CARD_LOADED:-}" ]] && return
 HOUSE_CARD_LOADED=1
 
-HOUSE_CARD_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # shellcheck source=housemember.sh
-source "${HOUSE_CARD_LIB_DIR}/housemember.sh"
+source "${HOUSE_LIB_DIR}/housemember.sh"
 
 HOUSE_CARD_ERROR=""
 HOUSE_CARD_RESULT=""
@@ -86,6 +84,11 @@ housecard_validate_metadata() {
         housecard_reject "Member '${HOUSE_MEMBER_ID}' is missing card/card.yml."
         return
     fi
+    if ! house_metadata_validate_schema "$HOUSE_CARD_PATH" \
+            "HouseCard '${HOUSE_MEMBER_ID}'" 1; then
+        housecard_reject "$HOUSE_METADATA_ERROR"
+        return
+    fi
 
     card_version="$(awk '$1 == "version:" { print $2; exit }' \
         "$HOUSE_CARD_PATH")"
@@ -156,6 +159,7 @@ housecard_write_card() {
     local display_name="$4"
 
     printf '%s\n' \
+        'schema: 1' \
         'version: 1' \
         '' \
         'member:' \
