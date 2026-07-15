@@ -1,6 +1,6 @@
 # Captain Cronos House Toolkit
 
-Version: 0.1.0-alpha1
+Version: 1.0.0-rc1
 
 Codename: Cerberus
 
@@ -140,6 +140,4 @@ before changing cleanup or path-resolution behavior.
 
 ## License
 
-No license terms have been declared yet; the repository's `LICENSE` file is
-currently empty. License selection is required before v1.0.0-rc1. Until then,
-no permission to copy, modify, or distribute this project is granted.
+HouseToolkit is released under the [MIT License](LICENSE).

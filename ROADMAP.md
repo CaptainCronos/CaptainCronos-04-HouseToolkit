@@ -12,9 +12,9 @@
 
 ## v1.0.0-rc1
 
-The first release candidate is a release-readiness milestone for the completed
-framework. It does not add rendering, document generation, packaging, or
-publishing logic.
+The first release candidate is complete. It is the release-readiness milestone
+for the implemented framework and does not add rendering, document generation,
+packaging, or publishing logic.
 
-Remaining release metadata decisions are tracked in
+The final release assessment is recorded in
 [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md).
