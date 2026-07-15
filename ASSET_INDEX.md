@@ -7,30 +7,31 @@
 | Field | Value |
 |---|---|
 | Repository | `CaptainCronos-04-HouseToolkit` |
-| Branch | `feature/v1.1-foundation` |
-| Commit | `71d4031` |
+| Branch | `main` |
+| Commit | `df52fe3` |
 | Index format | Deterministic |
 
 ## Summary
 
 | Category | Count |
 |---|---:|
-| Repository files | 61 |
+| Repository files | 62 |
 | Directories represented | 26 |
 | Markdown | 9 |
 | PNG images | 0 |
 | YAML configuration | 0 |
 | Office/template files | 0 |
-| Other files | 52 |
+| Other files | 53 |
 
 ## Files by Top-Level Directory
 
 ### Repository Root
 
+- `CHANGELOG.md`
+- `doit`
 - `.editorconfig`
 - `.gitignore`
 - `.house-toolkit`
-- `CHANGELOG.md`
 - `LICENSE`
 - `README.md`
 - `ROADMAP.md`
@@ -77,12 +78,12 @@
 
 - `lib/cli.sh`
 - `lib/commands.sh`
-- `lib/house_toolkit.sh`
 - `lib/housebuild.sh`
 - `lib/housecard.sh`
 - `lib/housepreview.sh`
 - `lib/housepublish.sh`
 - `lib/houserelease.sh`
+- `lib/house_toolkit.sh`
 - `lib/paths.sh`
 - `lib/validation.sh`
 - `lib/validators/house.sh`
