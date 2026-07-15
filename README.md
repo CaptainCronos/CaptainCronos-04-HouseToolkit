@@ -21,6 +21,25 @@ Current Commands
 - houserelease
 - housepublish
 
+## Installation
+
+Install command symlinks for the current user without `sudo` or changes to
+system directories:
+
+```text
+install/install.sh
+```
+
+The installer links every HouseToolkit command into `~/.local/bin` and leaves
+the repository files in place. It does not edit shell configuration. If
+`~/.local/bin` is not on `PATH`, it prints the exact optional line to add to
+`~/.bashrc`. During development, commands may continue to run directly, for
+example `./bin/househelp`.
+
+Use `install/install.sh --check` to validate an installation without changing
+it. Remove only this repository's installed links with
+`install/uninstall.sh`; its `--check` mode also makes no changes.
+
 ## HouseBuild
 
 HouseBuild is the rendering-engine stage between HouseCard and HousePreview.

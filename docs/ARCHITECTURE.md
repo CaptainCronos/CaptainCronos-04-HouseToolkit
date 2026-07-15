@@ -30,6 +30,24 @@ All commands and supporting libraries must obtain repository paths through
 `lib/paths.sh`. They must not build repository paths from the current working
 directory.
 
+The path abstraction resolves command symlinks before locating the repository.
+This allows the installer to expose commands from `~/.local/bin` while their
+libraries and data remain in the repository. Installer and uninstaller scripts
+also use `lib/paths.sh` to identify the repository whose links they manage.
+
+## User Installation
+
+`install/install.sh` creates absolute symlinks from `~/.local/bin` to the ten
+executables in `bin/`. No files are copied into system directories, and shell
+configuration is never edited. Existing files or nonmatching symlinks are
+treated as collisions and are preserved.
+
+`install/uninstall.sh` considers a link removable only when its name and exact
+target match the corresponding executable in the current repository. It
+preserves regular files, unrelated symlinks, malformed links, and the
+`~/.local/bin` directory itself. Both scripts provide a read-only `--check`
+mode.
+
 ## Member
 
 A Member represents one individual.

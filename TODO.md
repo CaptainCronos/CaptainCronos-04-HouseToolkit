@@ -2,7 +2,7 @@
 
 ## Milestones
 
-1. Foundation — Complete
+1. Foundation — Complete (including per-user installer)
 2. Member Management — Active
 3. Business Cards — HouseBuild and HousePreview Initial Frameworks Complete
 4. Branding
